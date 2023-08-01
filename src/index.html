@@ -5,6 +5,14 @@
 
 <script type="text/javascript">
 
+let maxminURL = "http://semmaxmin.40103709.qpc.hal.davecutting.uk/";
+let sortedURL = "http://semsort.40103709.qpc.hal.davecutting.uk/";
+
+if (!isRunningOnCloud()) {
+    maxminURL = "http://localhost:100/";
+    sortedURL = "http://localhost:90/";
+} 
+
 function isRunningOnCloud() // GPT-3.5, no amendments
 {
   const localPatterns = [
@@ -25,42 +33,6 @@ function isRunningOnCloud() // GPT-3.5, no amendments
   }
 
   return true; // It's running on the cloud
-}
-
-let maxminURL = "http://semmaxmin.40103709.qpc.hal.davecutting.uk/";
-let sortedURL = "http://semsort.40103709.qpc.hal.davecutting.uk/";
-
-if (!isRunningOnCloud()) {
-    maxminURL = "http://localhost:100/";
-    sortedURL = "http://localhost:90/";
-} 
-
-function displayMaxMin(max_attendance, min_attendance)
-{
-    document.getElementById('output-text').value = 'Maximum attendance = ' + max_attendance + ' hours'
-    + '\nMinimum attendance = ' + min_attendance + ' hours';
-
-}
-
-function displaySortedAttendance(sorted_attendance)
-{
-    document.getElementById('output-text').value = sorted_attendance;
-
-}
-
-function displayTotal()
-{
-    document.getElementById('output-text').value = 'Total Attendance (in hours) = ' + total_attendance + ' hours';
-
-}
-
-function clearText()
-{
-    document.getElementById('attendance_1').value = '';
-    document.getElementById('attendance_2').value = '';
-    document.getElementById('attendance_3').value = '';
-    document.getElementById('attendance_4').value = '';
-    document.getElementById('output-text').value = '';
 }
 
 function getMaxMin()
@@ -98,6 +70,13 @@ function getMaxMin()
   return;
 }
 
+function displayMaxMin(max_attendance, min_attendance)
+{
+    document.getElementById('output-text').value = 'Maximum attendance = ' + max_attendance + ' hours'
+    + '\nMinimum attendance = ' + min_attendance + ' hours';
+
+}
+
 function getSortedAttendance()
 {
   let item_1 = document.getElementById('item_1').value
@@ -126,6 +105,27 @@ function getSortedAttendance()
   + "&item_3=" + item_3 + "&attendance_3=" + attendance_3 + "&item_4=" + item_4 + "&attendance_4=" + attendance_4);
   xhttp.send();
   return;
+}
+
+function displaySortedAttendance(sorted_attendance)
+{
+    document.getElementById('output-text').value = sorted_attendance;
+
+}
+
+function displayTotal()
+{
+    document.getElementById('output-text').value = 'Total Attendance (in hours) = ' + total_attendance + ' hours';
+
+}
+
+function clearText()
+{
+    document.getElementById('attendance_1').value = '';
+    document.getElementById('attendance_2').value = '';
+    document.getElementById('attendance_3').value = '';
+    document.getElementById('attendance_4').value = '';
+    document.getElementById('output-text').value = '';
 }
 
 
