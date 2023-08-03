@@ -1,336 +1,330 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-<title>StudentEngagementMonitoring</title>
+  <title>StudentEngagementMonitoring</title>
 
-<script type="text/javascript">
+  <script type="text/javascript">
 
-let maxminURL = "http://semmaxmin.40103709.qpc.hal.davecutting.uk/";
-let sortURL = "http://semsort.40103709.qpc.hal.davecutting.uk/";
+    let maxminURL = "http://semmaxmin.40103709.qpc.hal.davecutting.uk/";
+    let sortURL = "http://semsort.40103709.qpc.hal.davecutting.uk/";
 
-if (!isRunningOnCloud()) {
-    maxminURL = "http://localhost:90/";
-    sortURL = "http://localhost:100/";
-} 
-
-reset()
-
-function isRunningOnCloud() // GPT-3.5, no amendments
-{
-  const localPatterns = [
-    /^localhost$/,
-    /^127\.0\.0\.1$/,
-    /^::1$/,
-    /^0\.0\.0\.0$/,
-    /^.*\.local$/,
-    /^.*\.dev$/,
-  ];
-
-  const hostname = window.location.hostname;
-
-  for (const pattern of localPatterns) {
-    if (pattern.test(hostname)) {
-      return false; // It's running locally
+    if (!isRunningOnCloud()) {
+      maxminURL = "http://localhost:90/";
+      sortURL = "http://localhost:100/";
     }
-  }
 
-  return true; // It's running on the cloud
-}
+    reset()
 
-function zero(value)
-{
-  if (value == '') value = 0
-  return value
-}
+    function isRunningOnCloud() // GPT-3.5, no amendments
+    {
+      const localPatterns = [
+        /^localhost$/,
+        /^127\.0\.0\.1$/,
+        /^::1$/,
+        /^0\.0\.0\.0$/,
+        /^.*\.local$/,
+        /^.*\.dev$/,
+      ];
 
-function validateAttendances(uRL) 
-{
-  let items = [];
-  let attendances = [];
-  let hasNext = true;
-  let id = 1;
-  let querystring = `${uRL}?marco=polo`;
+      const hostname = window.location.hostname;
 
-  while (hasNext) 
-  {
-    items.push(document.getElementById(`item_${id}`).value);
-    attendances.push(zero(document.getElementById(`attendance_${id}`).value));
-    querystring += `&item_${id}=${items[id-1]}&attendance_${id}=${attendances[id-1]}`
-    id++;
-    if (document.getElementById(`item_${id}`) == null || document.getElementById(`attendance_${id}`) == null) hasNext = false;
-  };    
-
-  return { items, attendances, querystring }
-}
-
-function displayMaxMin(max_attendance, min_attendance)
-{
-    document.getElementById('output-text').value = 'Maximum attendance = ' + max_attendance + ' hours'
-    + '\nMinimum attendance = ' + min_attendance + ' hours';
-
-}
-
-function displaySortedAttendance(sorted_attendance)
-{
-    document.getElementById('output-text').value = sorted_attendance;
-
-}
-
-function displayTotal()
-{
-    document.getElementById('output-text').value = 'Total Attendance (in hours) = ' + total_attendance + ' hours';
-
-}
-
-function getMaxMin()
-{
-  const { items, attendances, querystring } = validateAttendances(maxminURL);
-
-  console.log(querystring);
-
-  let xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-      //let response = this.response
-      var j = JSON.parse(this.response);
-      console.log('test -- ' + j.max_item);
-      let max_attendance = j.max_item;
-      let min_attendance = j.min_item;
-      displayMaxMin(max_attendance,min_attendance);
-
-    }
-  };
-  xhttp.open("GET", querystring);
-  xhttp.send();
-  return;
-}
-
-function getSortedAttendance()
-{
-
-  const { items, attendances, querystring } = validateAttendances(sortURL);
-
-  let xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-      var j = JSON.parse(this.response);
-      console.log(j);
-      let sorted_attendance_returned = j.sorted_attendance;
-      let sorted_attendance = '';
-      for (let i = 0; i < sorted_attendance_returned.length; i++) {
-        sorted_attendance += sorted_attendance_returned[i]['item'] + ' - ' + sorted_attendance_returned[i]['attendance'] + ' hours' + '\r\n';
+      for (const pattern of localPatterns) {
+        if (pattern.test(hostname)) {
+          return false; // It's running locally
+        }
       }
-      displaySortedAttendance(sorted_attendance);
+
+      return true; // It's running on the cloud
     }
-  };
-  xhttp.open("GET", querystring);
-  xhttp.send();
-  return;
-}
 
-function reset()
-{
+    function zero(value) {
+      if (value == '') value = 0;
+      return value;
+    }
 
-  // document.getElementById(`item_1`).value = "Lecture sessions"
-  // document.getElementById(`item_2`).value = "Lab sessions"
-  // document.getElementById(`item_3`).value = "Support sessions"
-  // document.getElementById(`item_4`).value = "Canvas activities"
+    function validateAttendances(uRL) {
+      let items = [];
+      let attendances = [];
+      let hasNext = true;
+      let id = 1;
+      let querystring = `${uRL}?marco=polo`;
 
-  let hasNext = true;
-  let id = 1;
+      while (hasNext) {
+        items.push(document.getElementById(`item_${id}`).value);
+        attendances.push(zero(document.getElementById(`attendance_${id}`).value));
+        querystring += `&item_${id}=${items[id - 1]}&attendance_${id}=${attendances[id - 1]}`
+        id++;
+        if (document.getElementById(`item_${id}`) == null || document.getElementById(`attendance_${id}`) == null) hasNext = false;
+      };
 
-  while (hasNext) 
-  {
-    document.getElementById(`attendance_${id}`).value = '';
-    id++;
-    if (document.getElementById(`attendance_${id}`) == null) hasNext = false;
-  };
-    document.getElementById('output-text').value = '';
-}
+      return { items, attendances, querystring }
+    }
+
+    function displayMaxMin(max_attendance, min_attendance) {
+      document.getElementById('output-text').value = 'Maximum attendance = ' + max_attendance + ' hours'
+        + '\nMinimum attendance = ' + min_attendance + ' hours';
+
+    }
+
+    function displaySortedAttendance(sorted_attendance) {
+      document.getElementById('output-text').value = sorted_attendance;
+
+    }
+
+    function displayTotal() {
+      document.getElementById('output-text').value = 'Total Attendance (in hours) = ' + total_attendance + ' hours';
+
+    }
+
+    function getMaxMin() {
+      const { items, attendances, querystring } = validateAttendances(maxminURL);
+
+      console.log(querystring);
+
+      let xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+          //let response = this.response
+          var j = JSON.parse(this.response);
+          console.log('test -- ' + j.max_item);
+          let max_attendance = j.max_item;
+          let min_attendance = j.min_item;
+          displayMaxMin(max_attendance, min_attendance);
+
+        }
+      };
+      xhttp.open("GET", querystring);
+      xhttp.send();
+      return;
+    }
+
+    function getSortedAttendance() {
+
+      const { items, attendances, querystring } = validateAttendances(sortURL);
+
+      let xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+          var j = JSON.parse(this.response);
+          console.log(j);
+          let sorted_attendance_returned = j.sorted_attendance;
+          let sorted_attendance = '';
+          for (let i = 0; i < sorted_attendance_returned.length; i++) {
+            sorted_attendance += sorted_attendance_returned[i]['item'] + ' - ' + sorted_attendance_returned[i]['attendance'] + ' hours' + '\r\n';
+          }
+          displaySortedAttendance(sorted_attendance);
+        }
+      };
+      xhttp.open("GET", querystring);
+      xhttp.send();
+      return;
+    }
+
+    function reset() {
+
+      // document.getElementById(`item_1`).value = "Lecture sessions"
+      // document.getElementById(`item_2`).value = "Lab sessions"
+      // document.getElementById(`item_3`).value = "Support sessions"
+      // document.getElementById(`item_4`).value = "Canvas activities"
+
+      let hasNext = true;
+      let id = 1;
+
+      while (hasNext) {
+        document.getElementById(`attendance_${id}`).value = '';
+        id++;
+        if (document.getElementById(`attendance_${id}`) == null) hasNext = false;
+      };
+      document.getElementById('output-text').value = '';
+    }
 
 
-</script>
+  </script>
 
-<style type="text/css">
-body  {
-    font-size: 150%;
-    font-family: "Segoe UI", sans-serif;
-}
-#logo
-{
-    font-weight: lighter;
-    color: #505050;
-    margin: 0.5em;
-}
+  <style type="text/css">
+    body {
+      font-size: 150%;
+      font-family: "Tenorite", "Segoe UI", sans-serif;
+    }
 
-#sem
-{
-    text-align: center;
-    margin-top: 1em;
-}
 
-.left{
-    margin-top: 1em;
-}
+    #logo {
+      font-weight: 600;
+      color: #505050;
+      margin: 1em;
+    }
 
-.in {
-    font-family: monospace;
-    background-color:#d5d8dc  ;
-}
-#input-div-2
-{
-    background-color:#abb2b9 ;
-}
-#output-div
-{
-    background-color:#808b96 ;
-}
-/* .in input {
-    
-} */
-.display-item {
-    font-size: 90%;
-    color: black;
-    font-family: monospace;
-    background-color: white;
-    padding: 0.2em;
-    margin: 0.2em;
-    letter-spacing: 0.1em;
-    width: 380px;
-    text-align: right;
-}
+    #sem {
+      text-align: center;
+      margin-top: 1em;
+    }
 
-.display-attendance {
-    font-size: 90%;
-    color: black;
-    background-color: white;
-    padding: 0.2em;
-    margin: 0.2em;
-    font-family: monospace;
-    letter-spacing: 0.1em;
-    width: 40px;
-}
+    #left {
+      min-width: 510px;
+    }
 
-.display-output {
-    font-size: 90%;
-    color: black;
-    background-color:white ;
-    padding: 0.2em;
-    margin: 0.2em;
-    font-family: monospace;
-    letter-spacing: 0.1em;
-    width: 600px;
+    @media only screen and (min-width: 950px) {
+      #left, #right {
+        display: inline-block;
+        vertical-align: top;
+        max-width: 49%;
+      }
 
-}
+    }
 
-label {
-    display: inline-block;
-    width: 150px;
-    text-align: left;
-}
+    .in {
+      background-color: #d5d8dc;
+    }
 
-.sembutton-active {
-    background-color:   #2874a6  ;
-    color: white;
-    padding: 0px 32px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 18px;
-    margin: 4px 2px;
-    cursor: pointer;
-    height: 50px;
-    width: 400px;
-}
+    .in, .in input, textarea {
+      font-size: 90%;
+      font-family: monospace;
+      font-weight: 600;
+      color: #2a2a2a;
+    }
 
-.sembutton-inactive {
-    background-color: gray;
-    color: white;
-    padding: 0px 32px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 18px;
-    margin: 4px 2px;
-    cursor: pointer;
-    height: 50px;
-    width: 400px;
-}
+    #input-div-2 {
+      background-color: #abb2b9;
+    }
 
-.sembutton-clear {
-    background-color:  #c0392b ;
-    color: white;
-    padding: 0px 32px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 18px;
-    margin: 4px 2px;
-    cursor: pointer;
-    height: 40px;
-    width: 400px;
-}
+    #output-div {
+      background-color: #808b96;
+      line-height: 0;
+    }
 
-</style>
+    label {
+      display: inline-block;
+      padding: 4px;
+      margin: 4px;
+    }
+
+    label.display-item {
+      width: 250px;
+      text-align: right;
+    }
+
+    input.display-attendance {
+      background-color: white;
+      padding: 4px;
+      margin: 4px;
+      font-family: monospace;
+      letter-spacing: 0.1em;
+      width: 40px;
+    }
+
+    label.out-of {
+      width: 150px;
+      text-align: left;
+    }
+
+    textarea.display-output {
+      background-color: white;
+      padding: 5px;
+      margin: 10px;
+      font-family: monospace;
+      width: 480px;
+      border: none;
+    }
+
+    button {
+      font-family: "Tenorite", "Segoe UI", sans-serif;
+      font-weight: 500;
+      color: white;
+      padding: 0px 32px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 18px;
+      margin: 4px 2px;
+      cursor: pointer;
+      height: 50px;
+      width: 400px;
+
+    }
+
+    .sembutton-active {
+      background-color: #2874a6;
+    }
+
+    .sembutton-inactive {
+      background-color: gray;
+    }
+
+    .sembutton-clear {
+      background-color: #c0392b;
+    }
+  </style>
 
 </head>
+
 <body>
-<div id="sem">
+  <div id="sem">
     <div id="logo">
-        Student Engagement Monitoring
+      Student Engagement Monitoring
     </div>
     <div id="left">
-        <div class="in" id="input-div-1">
-            <div>
-                <input class="display-item" type="text" id="item_1" name="item_1" value="Lecture sessions">
-                <input class="display-attendance"  type="number" min="0" max="33" id="attendance_1" name="attendance_1" placeholder="00"><label>/ 33 hours</label>
-            </div>
-            <div>
-                <input class="display-item" type="text" id="item_2" name="item_2" value="Lab sessions">
-                <input class="display-attendance"  type="number" min="0" max="22" id="attendance_2" name="attendance_2" placeholder="00"><label>/ 22 hours</label>
-            </div>
-            <div>
-                <input class="display-item" type="text" id="item_3" name="item_3" value="Support sessions">
-                <input class="display-attendance"  type="number" min="0" max="44" id="attendance_3" name="attendance_3" placeholder="00"><label>/ 44 hours</label>
-            </div>
-            <div>
-                <input class="display-item" type="text" id="item_4" name="item_4" value="Canvas activities">
-                <input class="display-attendance"  type="number" min="0" max="55" id="attendance_4" name="attendance_4" placeholder="00"><label>/ 55 hours</label>
-            </div>
+      <div class="in" id="input-div-1">
+        <div>
+          <label class="display-item" id="cutoff">Lecture sessions</label>
+          <input class="display-item" type="hidden" id="item_1" name="item_1" value="Lecture sessions">
+          <input class="display-attendance" type="number" min="0" max="33" id="attendance_1" name="attendance_1"
+            placeholder="00"><label class="out-of">/ 33 hours</label>
         </div>
-        <div class="in" id="input-div-2">
-            <label class="display-item" id="cutoff">Cut-off Engagement Score</label>
-            <input class="display-attendance"  type="number" min="0" max="100" id="cut-off" name="cut-off" placeholder="00"><label>/100 %</label>
+        <div>
+          <label class="display-item" id="cutoff">Lab sessions</label>
+          <input class="display-item" type="hidden" id="item_2" name="item_2" value="Lab sessions">
+          <input class="display-attendance" type="number" min="0" max="22" id="attendance_2" name="attendance_2"
+            placeholder="00"><label class="out-of">/ 22 hours</label>
         </div>
-        <div id="output-div">
-            <textarea class="display-output" id="output-text" rows="5" cols="35" readonly=1 placeholder="Results here..." value="">
+        <div>
+          <label class="display-item" id="cutoff">Support sessions</label>
+          <input class="display-item" type="hidden" id="item_3" name="item_3" value="Support sessions">
+          <input class="display-attendance" type="number" min="0" max="44" id="attendance_3" name="attendance_3"
+            placeholder="00"><label class="out-of">/ 44 hours</label>
+        </div>
+        <div>
+          <label class="display-item" id="cutoff">Canvas activities</label>
+          <input class="display-item" type="hidden" id="item_4" name="item_4" value="Canvas activities">
+          <input class="display-attendance" type="number" min="0" max="55" id="attendance_4" name="attendance_4"
+            placeholder="00"><label class="out-of">/ 55 hours</label>
+        </div>
+      </div>
+      <div class="in" id="input-div-2">
+        <label class="display-item" id="cutoff">Cut-off Engagement Score</label>
+        <input class="display-attendance" type="number" min="0" max="100" id="cut-off" name="cut-off"
+          placeholder="00"><label class="out-of">/100 %</label>
+      </div>
+      <div id="output-div">
+        <textarea class="display-output" id="output-text" rows="5" cols="35" readonly=1 placeholder="Results here..."
+          value="">
             </textarea>
-        </div>
+      </div>
     </div>
     <div id="right">
-        <div>
-            <button class="sembutton-active" onclick="getMaxMin();">Maximum and Minimum Attendance</button>
-        </div>
-        <div>
-            <button class="sembutton-active" onclick="getSortedAttendance();">Sort Attendance</button>
-        </div>
-        <div>
-            <button class="sembutton-inactive" onclick="getTotal();">Total Attendance Hours</button>
-        </div>
-        <div>
-            <button class="sembutton-inactive" onclick="getEngagementScore();">Student Engagement Score</button>
-        </div>
-        <div>
-            <button class="sembutton-inactive" onclick="getRisk();">Risk of Student Failure</button>
-        </div>
-        <div>
-            <button class="sembutton-inactive" onclick="getAttendanceToImprove();">???</button>
-        </div>
-        <div>
-            <button class="sembutton-clear" onclick="reset();">Clear</button>
-        </div>
+      <div>
+        <button class="sembutton-active" onclick="getMaxMin();">Maximum and Minimum Attendance</button>
+      </div>
+      <div>
+        <button class="sembutton-active" onclick="getSortedAttendance();">Sort Attendance</button>
+      </div>
+      <div>
+        <button class="sembutton-inactive" onclick="getTotal();">Total Attendance Hours</button>
+      </div>
+      <div>
+        <button class="sembutton-inactive" onclick="getEngagementScore();">Student Engagement Score</button>
+      </div>
+      <div>
+        <button class="sembutton-inactive" onclick="getRisk();">Risk of Student Failure</button>
+      </div>
+      <div>
+        <button class="sembutton-inactive" onclick="getAttendanceToImprove();">???</button>
+      </div>
+      <div>
+        <button class="sembutton-clear" onclick="reset();">Clear</button>
+      </div>
     </div>
-</div>
+  </div>
 </body>
 
 <script type="text/javascript">
