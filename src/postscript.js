@@ -41,6 +41,7 @@ if (!isRunningOnCloud()) {
   sortURL = "http://localhost:100/";
 }
 
+// Reset generates (here) and regenerates (when clicking Clear) the input form
 reset()
 
 function isRunningOnCloud() // GPT-3.5
@@ -73,18 +74,14 @@ function zero(value) {
 function validateAttendances(uRL) {
   let items = [];
   let attendances = [];
-  let hasNext = true;
-  let id = 1;
   let querystring = `${uRL}?marco=polo`;
 
-  while (hasNext) {
+  for (id = 1; id <= params.length; id++) {
     let item = document.getElementById(`item_${id}`);
     let attendance = document.getElementById(`attendance_${id}`);
     items.push(item.value);
     attendances.push(zero(attendance.value));
     querystring += `&item_${id}=${items[id - 1]}&attendance_${id}=${attendances[id - 1]}`
-    id++;
-    if (item == null || attendance == null) hasNext = false;
   };
 
   return { items, attendances, querystring }
