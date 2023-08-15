@@ -108,7 +108,7 @@ button {
 
 button:hover {
     border-width: 5px;
-    transition-duration: 0.3s;
+    /* transition-duration: 0.3s; */
 }
 
 .sembutton-active {
