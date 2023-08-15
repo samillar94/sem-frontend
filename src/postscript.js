@@ -36,16 +36,20 @@ let params = [
 let maxminURL = "http://semmaxmin.40103709.qpc.hal.davecutting.uk/";
 let sortURL = "http://semsort.40103709.qpc.hal.davecutting.uk/";
 let scoreURL = "http://semscore.40103709.qpc.hal.davecutting.uk/";
+let totalURL = "http://semtotal.40103709.qpc.hal.davecutting.uk/";
 
+// Assign ports alphabetically
 if (!isRunningOnCloud()) {
   maxminURL = "http://localhost:81/";
   scoreURL = "http://localhost:82/";
   sortURL = "http://localhost:83/";
+  totalURL = "http://localhost:84/";
 }
 
 // Reset generates (here) and regenerates (when clicking Clear) the input form
 reset()
 
+// Functions (called by buttons or other functions)
 function isRunningOnCloud() // GPT-3.5
 {
   const localPatterns = [
@@ -179,12 +183,28 @@ function getSortedAttendance() {
 }
 
 function getTotal() {
-  const { items, attendances, querystring } = validateAttendances(sortURL);
-  total = 0;
-  // attendances.forEach((attendance)=>{
-  //   total+=parseInt(attendance)
-  // });
-  displayTotal(total);
+  const { items, attendances, querystring } = validateAttendances(totalURL);
+
+  console.log(querystring);
+
+  let xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function () {
+    console.log(this.readyState);
+    if (this.readyState == 4 && this.status == 200) {
+      //let response = this.response
+      var j = JSON.parse(this.response);
+      if (j.error) {
+        displayError("total", j.message);
+      } else {
+        let total = parseInt(j.total);
+        displayTotal(total);
+      }
+    } else if (this.readyState == 4 && this.status != 200) {
+      displayError("total", "the service did not respond");
+    }
+  };
+  xhttp.open("GET", querystring);
+  xhttp.send();
   return;
 }
 
