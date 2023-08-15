@@ -35,10 +35,12 @@ let params = [
 // To be replaced by proxy
 let maxminURL = "http://semmaxmin.40103709.qpc.hal.davecutting.uk/";
 let sortURL = "http://semsort.40103709.qpc.hal.davecutting.uk/";
+let scoreURL = "http://semscore.40103709.qpc.hal.davecutting.uk/";
 
 if (!isRunningOnCloud()) {
-  maxminURL = "http://localhost:90/";
-  sortURL = "http://localhost:100/";
+  maxminURL = "http://localhost:81/";
+  scoreURL = "http://localhost:82/";
+  sortURL = "http://localhost:83/";
 }
 
 // Reset generates (here) and regenerates (when clicking Clear) the input form
@@ -75,16 +77,17 @@ function validateAttendances(uRL) {
   let items = [];
   let attendances = [];
   let querystring = `${uRL}?marco=polo`;
+  let warningstring = '';
 
   for (id = 1; id <= params.length; id++) {
     let item = document.getElementById(`item_${id}`);
     let attendance = document.getElementById(`attendance_${id}`);
     items.push(item.value);
     attendances.push(zero(attendance.value));
-    querystring += `&item_${id}=${items[id - 1]}&attendance_${id}=${attendances[id - 1]}`
+    querystring += `&item_${id}=${items[id - 1]}&attendance_${id}=${attendances[id - 1]}`;
   };
 
-  return { items, attendances, querystring }
+  return { items, attendances, querystring, warningstring }
 }
 
 function displayMaxMin(max_attendance, min_attendance) {
@@ -102,7 +105,7 @@ function displayTotal(total) {
 }
 
 function displayEngagementScore(score) {
-  document.getElementById('output-text').value = 'Engagement score TBD';
+  document.getElementById('output-text').value = 'Engagement score ' + score + ' / 1';
 }
 
 function displayRisk(risk) {
@@ -161,10 +164,11 @@ function getSortedAttendance() {
         let sorted_attendance_returned = j.sorted_attendance;
         let sorted_attendance = '';
         for (let i = 0; i < sorted_attendance_returned.length; i++) {
-          sorted_attendance += sorted_attendance_returned[i]['item'] + ' - ' + sorted_attendance_returned[i]['attendance'] + ' hours' + '\r\n';
+          sorted_attendance += sorted_attendance_returned[i]['item'] 
+          + ' - ' + sorted_attendance_returned[i]['attendance'] + ' hours' + '\r\n';
         }
+        displaySortedAttendance(sorted_attendance);
       }
-      displaySortedAttendance(sorted_attendance);
     } else if (this.readyState == 4 && this.status != 200) {
       displayError("sort", "the service did not respond");
     }
@@ -185,7 +189,28 @@ function getTotal() {
 }
 
 function getEngagementScore() {
-  displayEngagementScore()
+  const { items, attendances, querystring } = validateAttendances(scoreURL);
+
+  console.log(querystring);
+
+  let xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function () {
+    console.log(this.readyState);
+    if (this.readyState == 4 && this.status == 200) {
+      //let response = this.response
+      var j = JSON.parse(this.response);
+      if (j.error) {
+        displayError("score", j.message);
+      } else {
+        let score = parseFloat(j.score).toFixed(2);
+        displayEngagementScore(score);
+      }
+    } else if (this.readyState == 4 && this.status != 200) {
+      displayError("score", "the service did not respond");
+    }
+  };
+  xhttp.open("GET", querystring);
+  xhttp.send();
   return;
 }
 
