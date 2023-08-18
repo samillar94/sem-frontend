@@ -1,4 +1,4 @@
-// To be replaced by storage
+/// To be replaced by proxy call
 let params = [
   {
     "item": "Lecture sessions",
@@ -32,13 +32,24 @@ let params = [
   }
 ]
 
-// To be replaced by proxy
+/// Frontend Service Failure Handler
+const proxyURIs = require('./proxyregister.json');
+
+let roundrobin = 0;
+
+function loadBalancedProxyURI()
+{
+  roundrobin = (roundrobin++)%proxyURIs.length;
+  return proxyURIs[roundrobin];
+}
+
+/// To be replaced by proxy
 let maxminURL = "http://semmaxmin.40103709.qpc.hal.davecutting.uk/";
 let sortURL = "http://semsort.40103709.qpc.hal.davecutting.uk/";
 let scoreURL = "http://semscore.40103709.qpc.hal.davecutting.uk/";
 let totalURL = "http://semtotal.40103709.qpc.hal.davecutting.uk/";
 
-// Assign ports alphabetically
+/// Assign ports alphabetically
 if (!isRunningOnCloud()) {
   maxminURL = "http://localhost:81/";
   scoreURL = "http://localhost:82/";
@@ -46,14 +57,14 @@ if (!isRunningOnCloud()) {
   totalURL = "http://localhost:84/";
 }
 
-// Reset generates (here) and regenerates (when clicking Clear) the input form
+/// Reset generates (here) and regenerates (when clicking Clear) the input form
 reset()
 
-// Functions (called by buttons or other functions)
+/// Functions (called by buttons or other functions)
 function isRunningOnCloud() // GPT-3.5
 {
   const localPatterns = [
-    /localhost$/, // amended to include wsl.localhost
+    /localhost$/, /// amended to include wsl.localhost
     /^127\.0\.0\.1$/,
     /^::1$/,
     /^0\.0\.0\.0$/,
@@ -94,6 +105,11 @@ function validateAttendances(uRL) {
   return { items, attendances, querystring, warningstring }
 }
 
+/// to be replaced by single display function?
+function display(text) {
+  document.getElementById('output-text').value = text;
+}
+
 function displayMaxMin(max_attendance, min_attendance) {
   document.getElementById('output-text').value =
     'Maximum attendance = ' + max_attendance + ' hours'
@@ -125,6 +141,7 @@ function displayError(service, message) {
   // document.getElementById('output-text').style.color = '#880000';
 }
 
+/// to be replaced by single get function? e.g. get('sort')
 function getMaxMin() {
   const { items, attendances, querystring } = validateAttendances(maxminURL);
 
@@ -246,18 +263,47 @@ function getPercentages() {
 
 function reset() {
 
-  let inputs1 = "";
+  let inputsHTML = "";
 
-  for (id = 1; id <= params.length; id++) {
-    inputs1 += `<div class="input-div-${(params[id - 1]['default']) ? "2" : "1"}">
-        <label class="display-item">${params[id - 1]['item']}</label>
-        <input class="display-item" type="hidden" id="item_${id}" name="item_${id}" value="${params[id - 1]['item']}">
-        <input class="display-attendance" type="number" min="0" max="${params[id - 1]['available']}" id="attendance_${id}" name="attendance_${id}" placeholder="00" ${(params[id - 1]['default']) ? 'value="' + params[id - 1]['default'] + '"' : ""}><label class="out-of">/${params[id - 1]['available']} ${params[id - 1]['unit']}</label>
-      </div>`
-  }
+  let xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function () {
+    console.log(this.readyState);
+    if (this.readyState == 4 && this.status == 200) {
+      //let response = this.response
+      var j = JSON.parse(this.response);
+      console.log(j)
+      if (j.error) {
+        displayError("proxy", j.message);
+      } else {
+        let {components, standards} = j;
+        for (id = 1, index = 0; index < components.length; id++, index++) {
+          inputsHTML += `<div class="input-div-1"}">
+              <label class="display-item">${components[index]['item']}</label>
+              <input class="display-item" type="hidden" id="item_${id}" name="item_${id}" value="${components[index]['item']}">
+              <input class="display-attendance" type="number" min="0" max="${components[index]['available']}" id="attendance_${id}" name="attendance_${id}" placeholder="00" ${(components[index]['default']) ? 'value="' + components[index]['default'] + '"' : ""}><label class="out-of">/${components[index]['available']} ${components[index]['unit']}</label>
+            </div>`
+        }    
+        for (id = components.length+1, index = 0; index < standards.length; id++, index++) {
+          inputsHTML += `<div class="input-div-2"}">
+              <label class="display-item">${standards[id - 1]['item']}</label>
+              <input class="display-item" type="hidden" id="item_${id}" name="item_${id}" value="${standards[id - 1]['item']}">
+              <input class="display-attendance" type="number" min="0" max="${standards[id - 1]['available']}" id="attendance_${id}" name="attendance_${id}" placeholder="00" ${(standards[id - 1]['default']) ? 'value="' + standards[id - 1]['default'] + '"' : ""}><label class="out-of">/${standards[id - 1]['available']} ${standards[id - 1]['unit']}</label>
+            </div>`
+        }    
+        document.getElementById('inputs').innerHTML = inputsHTML
+        document.getElementById('output-text').value = '';          
+      }
+    } else if (this.readyState == 4 && this.status != 200) {
+      displayError("proxy", "the service did not respond");
+    }
+  };
+  xhttp.open("GET", loadBalancedProxyURI()+"/setup"); /// TODO change to proxy call
+  xhttp.send();
 
-  document.getElementById('inputs').innerHTML = inputs1
 
-  document.getElementById('output-text').value = '';
+
+  
+
+
 }
 
