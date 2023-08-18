@@ -33,14 +33,19 @@ let params = [
 ]
 
 /// Frontend Service Failure Handler
-const proxyURIs = require('./proxyregister.json');
+let proxyURIs = [];
+let proxyLocal = '';
 
 let roundrobin = 0;
 
 function loadBalancedProxyURI()
 {
-  roundrobin = (roundrobin++)%proxyURIs.length;
-  return proxyURIs[roundrobin];
+  if (isRunningOnCloud()) {
+    roundrobin = (roundrobin++)%proxyURIs.length;
+    return proxyURIs[roundrobin];
+  } else {
+    return proxyLocal;
+  }
 }
 
 /// To be replaced by proxy
@@ -49,13 +54,6 @@ let sortURL = "http://semsort.40103709.qpc.hal.davecutting.uk/";
 let scoreURL = "http://semscore.40103709.qpc.hal.davecutting.uk/";
 let totalURL = "http://semtotal.40103709.qpc.hal.davecutting.uk/";
 
-/// Assign ports alphabetically
-if (!isRunningOnCloud()) {
-  maxminURL = "http://localhost:81/";
-  scoreURL = "http://localhost:82/";
-  sortURL = "http://localhost:83/";
-  totalURL = "http://localhost:84/";
-}
 
 /// Reset generates (here) and regenerates (when clicking Clear) the input form
 reset()
@@ -169,6 +167,15 @@ function getMaxMin() {
   return;
 }
 
+function get(servicename) {
+  if (!isRunningOnCloud()) {
+    maxminURL = "http://localhost:81/";
+    scoreURL = "http://localhost:82/";
+    sortURL = "http://localhost:83/";
+    totalURL = "http://localhost:84/";
+  }
+}
+
 function getSortedAttendance() {
 
   const { items, attendances, querystring } = validateAttendances(sortURL);
@@ -275,7 +282,8 @@ function reset() {
       if (j.error) {
         displayError("proxy", j.message);
       } else {
-        let {components, standards} = j;
+        let {components, standards} = j.inputs;
+        /// TODO Need error handling here
         for (id = 1, index = 0; index < components.length; id++, index++) {
           inputsHTML += `<div class="input-div-1"}">
               <label class="display-item">${components[index]['item']}</label>
@@ -285,9 +293,9 @@ function reset() {
         }    
         for (id = components.length+1, index = 0; index < standards.length; id++, index++) {
           inputsHTML += `<div class="input-div-2"}">
-              <label class="display-item">${standards[id - 1]['item']}</label>
-              <input class="display-item" type="hidden" id="item_${id}" name="item_${id}" value="${standards[id - 1]['item']}">
-              <input class="display-attendance" type="number" min="0" max="${standards[id - 1]['available']}" id="attendance_${id}" name="attendance_${id}" placeholder="00" ${(standards[id - 1]['default']) ? 'value="' + standards[id - 1]['default'] + '"' : ""}><label class="out-of">/${standards[id - 1]['available']} ${standards[id - 1]['unit']}</label>
+              <label class="display-item">${standards[index]['item']}</label>
+              <input class="display-item" type="hidden" id="item_${id}" name="item_${id}" value="${standards[index]['item']}">
+              <input class="display-attendance" type="number" min="0" max="${standards[index]['available']}" id="attendance_${id}" name="attendance_${id}" placeholder="00" ${(standards[index]['default']) ? 'value="' + standards[index]['default'] + '"' : ""}><label class="out-of">/${standards[index]['available']} ${standards[index]['unit']}</label>
             </div>`
         }    
         document.getElementById('inputs').innerHTML = inputsHTML
@@ -297,13 +305,22 @@ function reset() {
       displayError("proxy", "the service did not respond");
     }
   };
-  xhttp.open("GET", loadBalancedProxyURI()+"/setup"); /// TODO change to proxy call
-  xhttp.send();
 
 
-
-  
-
+  fetch('proxyregistry.json')
+  .then(response => response.json())
+  .then(data => {
+    console.log(data); // This will output the parsed JSON data
+    proxyLocal = data.urilocal;
+    proxyURIs = data.uris;
+    let proxyURI = loadBalancedProxyURI()+"/status";
+    console.log(proxyURI);    
+    xhttp.open("GET", proxyURI);
+    xhttp.send();
+  })
+  .catch(error => {
+    console.error('Error loading JSON:', error);
+  });
 
 }
 
