@@ -1,3 +1,5 @@
+// const { count } = require("console");
+
 /// To be replaced by proxy call
 let params = [
   {
@@ -49,14 +51,17 @@ function loadBalancedProxyURI()
 }
 
 /// To be replaced by proxy
-let maxminURL = "http://semmaxmin.40103709.qpc.hal.davecutting.uk/";
-let sortURL = "http://semsort.40103709.qpc.hal.davecutting.uk/";
-let scoreURL = "http://semscore.40103709.qpc.hal.davecutting.uk/";
-let totalURL = "http://semtotal.40103709.qpc.hal.davecutting.uk/";
+let maxminURL = "http://semmaxmin.40103709.qpc.hal.davecutting.uk";
+let sortURL = "http://semsort.40103709.qpc.hal.davecutting.uk";
+let scoreURL = "http://semscore.40103709.qpc.hal.davecutting.uk";
+let totalURL = "http://semtotal.40103709.qpc.hal.davecutting.uk";
 
 
 /// Reset generates (here) and regenerates (when clicking Clear) the input form
 reset()
+
+
+
 
 /// Functions (called by buttons or other functions)
 function isRunningOnCloud() // GPT-3.5
@@ -103,6 +108,14 @@ function validateAttendances(uRL) {
   return { items, attendances, querystring, warningstring }
 }
 
+function countHealthy(service) {
+  count = 0;
+  if (service.instances) service.instances.forEach(instance => {
+    if (instance.healthy) count++;
+  });
+  return count;
+}
+
 /// to be replaced by single display function?
 function display(text) {
   document.getElementById('output-text').value = text;
@@ -139,6 +152,16 @@ function displayError(service, message) {
   // document.getElementById('output-text').style.color = '#880000';
 }
 
+
+/// TODO
+function get(servicename) {
+  if (!isRunningOnCloud()) {
+    maxminURL = "http://localhost:8001/";
+  }
+  if (servicename == 'maxmin') getMaxMin();
+  return;
+}
+
 /// to be replaced by single get function? e.g. get('sort')
 function getMaxMin() {
   const { items, attendances, querystring } = validateAttendances(maxminURL);
@@ -165,15 +188,6 @@ function getMaxMin() {
   xhttp.open("GET", querystring);
   xhttp.send();
   return;
-}
-
-function get(servicename) {
-  if (!isRunningOnCloud()) {
-    maxminURL = "http://localhost:81/";
-    scoreURL = "http://localhost:82/";
-    sortURL = "http://localhost:83/";
-    totalURL = "http://localhost:84/";
-  }
 }
 
 function getSortedAttendance() {
@@ -268,6 +282,9 @@ function getPercentages() {
   return;
 }
 
+
+
+
 function reset() {
 
   let inputsHTML = "";
@@ -282,7 +299,10 @@ function reset() {
       if (j.error) {
         displayError("proxy", j.message);
       } else {
+
         let {components, standards} = j.inputs;
+        let {services} = j;
+
         /// TODO Need error handling here
         for (id = 1, index = 0; index < components.length; id++, index++) {
           inputsHTML += `<div class="input-div-1"}">
@@ -299,13 +319,27 @@ function reset() {
             </div>`
         }    
         document.getElementById('inputs').innerHTML = inputsHTML
-        document.getElementById('output-text').value = '';          
+        document.getElementById('output-text').value = '';   
+        
+        buttonsHTML = '';
+
+        for (index = 0; index < services.length; index++) {
+          service = services[index];
+          healthy = (countHealthy(service) > 0);
+          buttonsHTML+=`<div><button class="sembutton-${healthy ? '' : 'in'}active" onclick="get('${service['name']}');">${service['button']}</button></div>`
+        };
+
+        buttonsHTML += `<div><button class="sembutton-clear" onclick="reset();">Clear</button></div>`;
+
+        console.log(buttonsHTML);
+
+        document.getElementById('right').innerHTML = buttonsHTML;
+        
       }
     } else if (this.readyState == 4 && this.status != 200) {
       displayError("proxy", "the service did not respond");
     }
   };
-
 
   fetch('proxyregistry.json')
   .then(response => response.json())
