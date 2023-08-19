@@ -301,7 +301,7 @@ function reset() {
       } else {
 
         let {components, standards} = j.inputs;
-        let {services} = j;
+        let {services, proxies} = j; /// TODO use returned proxies in Task E
 
         /// TODO Need error handling here
         for (id = 1, index = 0; index < components.length; id++, index++) {
