@@ -56,6 +56,16 @@ textarea {
     line-height: 0;
 }
 
+#warnings {
+    background-color: #808b96;
+    color: orange;
+}
+
+#errors {
+    background-color: #808b96;
+    color: red;
+}
+
 label {
     display: inline-block;
     padding: 4px;

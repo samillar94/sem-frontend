@@ -1,72 +1,122 @@
-// const { count } = require("console");
-
-/// To be replaced by proxy call
-let params = [
-  {
-    "item": "Lecture sessions",
-    "default": null,
-    "available": 33,
-    "unit": "hours"
-  },
-  {
-    "item": "Lab sessions",
-    "default": null,
-    "available": 22,
-    "unit": "hours"
-  },
-  {
-    "item": "Support sessions",
-    "default": null,
-    "available": 44,
-    "unit": "hours"
-  },
-  {
-    "item": "Canvas activities",
-    "default": null,
-    "available": 55,
-    "unit": "hours"
-  },
-  {
-    "item": "Cutoff Engagement Score",
-    "default": 70,
-    "available": 100,
-    "unit": "%"
-  }
-]
-
-/// Frontend Service Failure Handler
-let proxyURIs = [];
-let proxyLocal = '';
-
+/// Global variables populated during setup()
+let inputs = [];
+let services = [];
+let proxies = {};
 let roundrobin = 0;
+// /// To be replaced by proxy
+// let maxminURL = "http://semmaxmin.40103709.qpc.hal.davecutting.uk";
+// let sortURL = "http://semsort.40103709.qpc.hal.davecutting.uk";
+// let scoreURL = "http://semscore.40103709.qpc.hal.davecutting.uk";
+// let totalURL = "http://semtotal.40103709.qpc.hal.davecutting.uk";
 
-function loadBalancedProxyURI()
-{
-  if (isRunningOnCloud()) {
-    roundrobin = (roundrobin++)%proxyURIs.length;
-    return proxyURIs[roundrobin];
-  } else {
-    return proxyLocal;
-  }
+
+/// MAIN
+
+/// Setup generates (on frontend start) and regenerates (when clicking Clear) the input form
+setup()
+
+
+/// FUNCTIONS
+
+function setup() {
+
+  let inputsHTML = "";
+
+  let xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function () {
+    console.log(this.readyState);
+    if (this.readyState == 4 && this.status == 200) {
+      //let response = this.response
+      var j = JSON.parse(this.response);
+      console.log(j)
+      if (j.error) {
+        displayError(`The proxy returned an error: ${j.message}`);
+      } else {
+
+        ({inputs, services} = j); /// saves to global variables
+
+        let {components, standards} = inputs;
+
+        /// TODO Need error handling here
+        for (id = 1, index = 0; index < components.length; id++, index++) {
+          inputsHTML += `<div class="input-div-1"}">
+              <label class="display-item">${components[index]['item']}</label>
+              <input class="display-item" type="hidden" id="item_${id}" name="item_${id}" value="${components[index]['item']}">
+              <input class="display-attendance" type="number" min="0" max="${components[index]['available']}" id="attendance_${id}" name="attendance_${id}" placeholder="00" ${(components[index]['default']) ? 'value="' + components[index]['default'] + '"' : ""}><label class="out-of">/${components[index]['available']} ${components[index]['unit']}</label>
+            </div>`
+        }    
+        for (id = components.length+1, index = 0; index < standards.length; id++, index++) {
+          inputsHTML += `<div class="input-div-2"}">
+              <label class="display-item">${standards[index]['item']}</label>
+              <input class="display-item" type="hidden" id="item_${id}" name="item_${id}" value="${standards[index]['item']}">
+              <input class="display-attendance" type="number" min="0" max="${standards[index]['available']}" id="attendance_${id}" name="attendance_${id}" placeholder="00" ${(standards[index]['default']) ? 'value="' + standards[index]['default'] + '"' : ""}><label class="out-of">/${standards[index]['available']} ${standards[index]['unit']}</label>
+            </div>`
+        }    
+        document.getElementById('inputs').innerHTML = inputsHTML
+        document.getElementById('output-text').value = '';   
+        
+        buttonsHTML = '';
+
+        for (index = 0; index < services.length; index++) {
+          service = services[index];
+          healthy = (countHealthy(service) > 0);
+          buttonsHTML+=`<div><button class="sembutton-${healthy ? '' : 'in'}active" onclick="get('${service['name']}');">${service['button']}</button></div>`
+        };
+
+        buttonsHTML += `<div><button class="sembutton-clear" onclick="setup();">Clear</button></div>`;
+
+        console.log(buttonsHTML);
+
+        document.getElementById('right').innerHTML = buttonsHTML;
+        
+      }
+    } else if (this.readyState == 4 && this.status != 200) {
+      displayError("The proxy service did not respond");
+    }
+  };
+
+  // Load proxyregistry
+  fetch('proxyregistry.json')
+  .then(response => response.json())
+  .then(data => {
+    console.log(data); 
+    proxies.proxyLocal = data.urilocal;
+    proxies.proxyURIs = data.uris;
+    let proxyURI = loadBalancedProxyURI()+"/status";
+    console.log(proxyURI);    
+    xhttp.open("GET", proxyURI);
+    xhttp.send();
+  })
+  .catch(error => {
+    console.error('Error loading JSON:', error);
+  });
+
+
+
 }
 
-/// To be replaced by proxy
-let maxminURL = "http://semmaxmin.40103709.qpc.hal.davecutting.uk";
-let sortURL = "http://semsort.40103709.qpc.hal.davecutting.uk";
-let scoreURL = "http://semscore.40103709.qpc.hal.davecutting.uk";
-let totalURL = "http://semtotal.40103709.qpc.hal.davecutting.uk";
+function loadBalancedProxyURI() {
+  /**
+   * Task D
+   */
 
+  let { proxyURIs, proxyLocal } = proxies;
 
-/// Reset generates (here) and regenerates (when clicking Clear) the input form
-reset()
+  let proxyURI = proxyLocal;
 
+  if (isRunningOnCloud()) {
+    roundrobin = (roundrobin++)%proxyURIs.length;
+    proxyURI = proxyURIs[roundrobin];
+  } 
 
+return proxyURI }
 
+function isRunningOnCloud() {
 
-/// Functions (called by buttons or other functions)
-function isRunningOnCloud() // GPT-3.5
-{
   const localPatterns = [
+    /**
+     * Generated by GPT-3.5
+     */    
     /localhost$/, /// amended to include wsl.localhost
     /^127\.0\.0\.1$/,
     /^::1$/,
@@ -76,28 +126,164 @@ function isRunningOnCloud() // GPT-3.5
   ];
 
   const hostname = window.location.hostname;
+    /**
+     * Generated by GPT-3.5
+     */  
+
+  let result = true; // It's running on the cloud
 
   for (const pattern of localPatterns) {
+    /**
+     * Generated by GPT-3.5
+     */     
     if (pattern.test(hostname)) {
-      return false; // It's running locally
+      result = false;
+      break; // It's running locally
     }
   }
 
-  return true; // It's running on the cloud
+return result }
+
+function readInput(servicename) {
+
+  let result = {};
+  let querystring = `${loadBalancedProxyURI()}?service=${servicename}`;
+  let warnings = [];
+  let errors = [];
+
+  for (id = 1; id <= inputs.components.length; id++) {
+
+    let index = id - 1;
+    let {item, available} = inputs.components[index];
+    let attendance = document.getElementById(`attendance_${id}`);
+
+    if (attendance == '') {
+
+      attendance = 0;
+      warnings.push(`No input for ${item} - interpreted as 0`);
+
+    } else if (parseFloat(attendance) != NaN) {
+
+      attendance = parseFloat(attendance);
+
+      if (attendance < 0) {
+        errors.push(`${item} cannot be negative`);
+      } else if (attendance > available) {
+        errors.push(`${item} cannot be negative`);
+      }
+
+    } else {
+
+      errors.push(`${item} must be a number between 0 and ${available}`);
+
+    }
+
+    querystring += `&a${id}=${attendance}`;
+
+  }
+
+  let cutoff = document.getElementById(`attendance_5`);
+
+  if (cutoff == '') {
+
+    cutoff = 0;
+    warnings.push(`No input for ${item} - interpreted as 0`);
+
+  } else if (parseFloat(cutoff) != NaN) {
+
+    cutoff = parseFloat(cutoff);
+
+    if (cutoff < 0) {
+      errors.push(`${item} cannot be negative`);
+    } else if (attendance > 100) {
+      errors.push(`${item} cannot be greater than 100`);
+    }
+
+  } else {
+
+    errors.push(`${item} must be a number between 0 and 100`);
+
+  }
+
+  querystring += `&c=${cutoff}`;
+  
+  console.log(querystring)
+
+  /// result construction
+  if (errors.length = 0) {
+    result = {querystring};
+    if (warnings.length > 0) {
+      result.warnings = warnings;
+    }
+  } else {
+    result = {errors};
+  }
+
+return result }
+
+function countHealthy(service) {
+  count = 0;
+  if (service.instances) service.instances.forEach(instance => {
+    if (instance.healthy) count++;
+  });
+return count }
+
+function displayResult(result) {
+  document.getElementById('output-text').value += `<p>${result}</p>`;
 }
 
-function zero(value) {
-  if (value == '') value = 0;
-  return value;
-}
+function displayWarning(warning) {
+  document.getElementById('warnings').innerHTML += `<p>${warning}</p>`;
+return }
 
+function displayError(error) {
+  document.getElementById('errors').innerHTML += `<p>${error}</p>`;
+return }
+
+function get(servicename) {
+
+  const result = readInput(servicename);
+
+  result.warnings.forEach(line => displayWarning(line));
+
+  if (result.errors) {
+
+    result.errors.forEach(line => displayError(line));
+
+  } else {
+
+    let xhttp = new XMLHttpRequest();
+
+    xhttp.onreadystatechange = function () {
+      console.log(this.readyState);
+      if (this.readyState == 4 && this.status == 200) {
+        //let response = this.response
+        var j = JSON.parse(this.response);
+        if (j.error) {
+          displayError(`The ${servicename} service returned an error: ${j.message}`);
+        } else {
+          j.results.forEach(line => displayResult(line));
+        }
+      } else if (this.readyState == 4 && this.status != 200) {
+        displayError(`The ${servicename} service did not respond`);
+      }
+    }
+
+    xhttp.open("GET", querystring);
+    xhttp.send();
+
+  }
+    
+return }
+
+/// replaced by setupQuery()
 function validateAttendances(uRL) {
   let items = [];
   let attendances = [];
   let querystring = `${uRL}?marco=polo`;
   let warningstring = '';
 
-  for (id = 1; id <= params.length; id++) {
+  for (id = 1; id <= inputs.services.length; id++) {
     let item = document.getElementById(`item_${id}`);
     let attendance = document.getElementById(`attendance_${id}`);
     items.push(item.value);
@@ -105,22 +291,15 @@ function validateAttendances(uRL) {
     querystring += `&item_${id}=${items[id - 1]}&attendance_${id}=${attendances[id - 1]}`;
   };
 
+  function zero(value) {
+    if (value == '') value = 0;
+    return value;
+  }
+
   return { items, attendances, querystring, warningstring }
 }
 
-function countHealthy(service) {
-  count = 0;
-  if (service.instances) service.instances.forEach(instance => {
-    if (instance.healthy) count++;
-  });
-  return count;
-}
-
-/// to be replaced by single display function?
-function display(text) {
-  document.getElementById('output-text').value = text;
-}
-
+/// replaced by displayResult()
 function displayMaxMin(max_attendance, min_attendance) {
   document.getElementById('output-text').value =
     'Maximum attendance = ' + max_attendance + ' hours'
@@ -147,22 +326,7 @@ function displayPercentages(text) {
   document.getElementById('output-text').value = 'Percentages TBC';
 }
 
-function displayError(service, message) {
-  document.getElementById('output-text').value = `Error with the ${service} service: ${message}`;
-  // document.getElementById('output-text').style.color = '#880000';
-}
-
-
-/// TODO
-function get(servicename) {
-  if (!isRunningOnCloud()) {
-    maxminURL = "http://localhost:8001/";
-  }
-  if (servicename == 'maxmin') getMaxMin();
-  return;
-}
-
-/// to be replaced by single get function? e.g. get('sort')
+/// replaced by get()
 function getMaxMin() {
   const { items, attendances, querystring } = validateAttendances(maxminURL);
 
@@ -281,80 +445,3 @@ function getPercentages() {
   displayPercentages()
   return;
 }
-
-
-
-
-function reset() {
-
-  let inputsHTML = "";
-
-  let xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function () {
-    console.log(this.readyState);
-    if (this.readyState == 4 && this.status == 200) {
-      //let response = this.response
-      var j = JSON.parse(this.response);
-      console.log(j)
-      if (j.error) {
-        displayError("proxy", j.message);
-      } else {
-
-        let {components, standards} = j.inputs;
-        let {services, proxies} = j; /// TODO use returned proxies in Task E
-
-        /// TODO Need error handling here
-        for (id = 1, index = 0; index < components.length; id++, index++) {
-          inputsHTML += `<div class="input-div-1"}">
-              <label class="display-item">${components[index]['item']}</label>
-              <input class="display-item" type="hidden" id="item_${id}" name="item_${id}" value="${components[index]['item']}">
-              <input class="display-attendance" type="number" min="0" max="${components[index]['available']}" id="attendance_${id}" name="attendance_${id}" placeholder="00" ${(components[index]['default']) ? 'value="' + components[index]['default'] + '"' : ""}><label class="out-of">/${components[index]['available']} ${components[index]['unit']}</label>
-            </div>`
-        }    
-        for (id = components.length+1, index = 0; index < standards.length; id++, index++) {
-          inputsHTML += `<div class="input-div-2"}">
-              <label class="display-item">${standards[index]['item']}</label>
-              <input class="display-item" type="hidden" id="item_${id}" name="item_${id}" value="${standards[index]['item']}">
-              <input class="display-attendance" type="number" min="0" max="${standards[index]['available']}" id="attendance_${id}" name="attendance_${id}" placeholder="00" ${(standards[index]['default']) ? 'value="' + standards[index]['default'] + '"' : ""}><label class="out-of">/${standards[index]['available']} ${standards[index]['unit']}</label>
-            </div>`
-        }    
-        document.getElementById('inputs').innerHTML = inputsHTML
-        document.getElementById('output-text').value = '';   
-        
-        buttonsHTML = '';
-
-        for (index = 0; index < services.length; index++) {
-          service = services[index];
-          healthy = (countHealthy(service) > 0);
-          buttonsHTML+=`<div><button class="sembutton-${healthy ? '' : 'in'}active" onclick="get('${service['name']}');">${service['button']}</button></div>`
-        };
-
-        buttonsHTML += `<div><button class="sembutton-clear" onclick="reset();">Clear</button></div>`;
-
-        console.log(buttonsHTML);
-
-        document.getElementById('right').innerHTML = buttonsHTML;
-        
-      }
-    } else if (this.readyState == 4 && this.status != 200) {
-      displayError("proxy", "the service did not respond");
-    }
-  };
-
-  fetch('proxyregistry.json')
-  .then(response => response.json())
-  .then(data => {
-    console.log(data); // This will output the parsed JSON data
-    proxyLocal = data.urilocal;
-    proxyURIs = data.uris;
-    let proxyURI = loadBalancedProxyURI()+"/status";
-    console.log(proxyURI);    
-    xhttp.open("GET", proxyURI);
-    xhttp.send();
-  })
-  .catch(error => {
-    console.error('Error loading JSON:', error);
-  });
-
-}
-
