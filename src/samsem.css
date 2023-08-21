@@ -39,8 +39,7 @@ body {
 }
 
 #inputs,
-#inputs input,
-textarea {
+#inputs input {
     font-size: 90%;
     font-family: monospace;
     font-weight: 600;
@@ -54,16 +53,37 @@ textarea {
 #output {
     background-color: #808b96;
     line-height: 0;
+    padding: 10px 10px 0.1px 10px;
+}
+
+#output > div {
+    margin: 0px 0px 10px 0px;
+    color: #2a2a2a;
+    font-family: monospace;
+    font-weight: 600;
+    font-size: 90%;
+    line-height: 1;
+    /* width: 480px; */
+    border: none;   
+    text-align: left; 
+    border-radius: 3px;
+}
+
+#output > div > p {
+    margin: 0;
+    padding: 3px;
+}
+
+#results {
+    background-color: #d5d8dc;
 }
 
 #warnings {
-    background-color: #808b96;
-    color: orange;
+    background-color: #ffff88;
 }
 
 #errors {
-    background-color: #808b96;
-    color: red;
+    background-color: #ff8888;
 }
 
 label {

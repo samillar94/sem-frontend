@@ -14,6 +14,9 @@ let roundrobin = 0;
 
 /// Setup generates (on frontend start) and regenerates (when clicking Clear) the input form
 setup()
+displayResult("test");
+displayWarning("test");
+displayError("test");
 
 
 /// FUNCTIONS
@@ -53,8 +56,10 @@ function setup() {
             </div>`
         }    
         document.getElementById('inputs').innerHTML = inputsHTML
-        document.getElementById('output-text').value = '';   
-        
+        document.getElementById('results').innerHTML = '<p>Results:</p>';   
+        document.getElementById('warnings').innerHTML = '';   
+        document.getElementById('errors').innerHTML = '';   
+   
         buttonsHTML = '';
 
         for (index = 0; index < services.length; index++) {
@@ -155,7 +160,7 @@ function readInput(servicename) {
 
     let index = id - 1;
     let {item, available} = inputs.components[index];
-    let attendance = document.getElementById(`attendance_${id}`);
+    let attendance = document.getElementById(`attendance_${id}`).value;
 
     if (attendance == '') {
 
@@ -168,8 +173,8 @@ function readInput(servicename) {
 
       if (attendance < 0) {
         errors.push(`${item} cannot be negative`);
-      } else if (attendance > available) {
-        errors.push(`${item} cannot be negative`);
+      } else if (attendance > parseFloat(available)) {
+        errors.push(`${item} cannot be greater than ${available}`);
       }
 
     } else {
@@ -182,21 +187,21 @@ function readInput(servicename) {
 
   }
 
-  let cutoff = document.getElementById(`attendance_5`);
+  let cutoff = document.getElementById(`attendance_5`).value;
 
   if (cutoff == '') {
 
     cutoff = 0;
-    warnings.push(`No input for ${item} - interpreted as 0`);
+    warnings.push(`No input for cutoff - interpreted as 0`);
 
   } else if (parseFloat(cutoff) != NaN) {
 
     cutoff = parseFloat(cutoff);
 
     if (cutoff < 0) {
-      errors.push(`${item} cannot be negative`);
-    } else if (attendance > 100) {
-      errors.push(`${item} cannot be greater than 100`);
+      errors.push(`Cutoff cannot be negative`);
+    } else if (cutoff > 100) {
+      errors.push(`Cutoff cannot be greater than 100%`);
     }
 
   } else {
@@ -206,18 +211,19 @@ function readInput(servicename) {
   }
 
   querystring += `&c=${cutoff}`;
-  
-  console.log(querystring)
 
   /// result construction
-  if (errors.length = 0) {
+  if (errors.length == 0) {
     result = {querystring};
-    if (warnings.length > 0) {
-      result.warnings = warnings;
-    }
   } else {
     result = {errors};
   }
+
+  if (warnings.length > 0) {
+    result.warnings = warnings;
+  }
+
+  console.log(result)
 
 return result }
 
@@ -236,7 +242,7 @@ function displayWarning(warning) {
   document.getElementById('warnings').innerHTML += `<p>${warning}</p>`;
 return }
 
-function displayError(error) {
+function displayError(error) {  
   document.getElementById('errors').innerHTML += `<p>${error}</p>`;
 return }
 
@@ -244,7 +250,14 @@ function get(servicename) {
 
   const result = readInput(servicename);
 
-  result.warnings.forEach(line => displayWarning(line));
+  document.getElementById('warnings').innerHTML = '';   
+  document.getElementById('errors').innerHTML = '';   
+
+  if (result.warnings) {
+
+    result.warnings.forEach(line => displayWarning(line));
+
+  }
 
   if (result.errors) {
 
@@ -269,7 +282,7 @@ function get(servicename) {
       }
     }
 
-    xhttp.open("GET", querystring);
+    xhttp.open("GET", result.querystring);
     xhttp.send();
 
   }
