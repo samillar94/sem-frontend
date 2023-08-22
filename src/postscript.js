@@ -42,14 +42,14 @@ function setup() {
           inputsHTML += `<div class="input-div-1"}">
               <label class="display-item">${components[index]['item']}</label>
               <input class="display-item" type="hidden" id="item_${id}" name="item_${id}" value="${components[index]['item']}">
-              <input class="display-attendance" type="number" min="0" max="${components[index]['available']}" id="attendance_${id}" name="attendance_${id}" placeholder="00" ${(components[index]['default']) ? 'value="' + components[index]['default'] + '"' : ""}><label class="out-of">/${components[index]['available']} ${components[index]['unit']}</label>
+              <input class="display-attendance" type="number" min="0" max="${components[index]['availability']}" id="attendance_${id}" name="attendance_${id}" placeholder="00" ${(components[index]['default']) ? 'value="' + components[index]['default'] + '"' : ""}><label class="out-of">/${components[index]['availability']} ${components[index]['unit']}</label>
             </div>`
         }    
         for (id = components.length+1, index = 0; index < standards.length; id++, index++) {
           inputsHTML += `<div class="input-div-2"}">
               <label class="display-item">${standards[index]['item']}</label>
               <input class="display-item" type="hidden" id="item_${id}" name="item_${id}" value="${standards[index]['item']}">
-              <input class="display-attendance" type="number" min="0" max="${standards[index]['available']}" id="attendance_${id}" name="attendance_${id}" placeholder="00" ${(standards[index]['default']) ? 'value="' + standards[index]['default'] + '"' : ""}><label class="out-of">/${standards[index]['available']} ${standards[index]['unit']}</label>
+              <input class="display-attendance" type="number" min="0" max="${standards[index]['availability']}" id="attendance_${id}" name="attendance_${id}" placeholder="00" ${(standards[index]['default']) ? 'value="' + standards[index]['default'] + '"' : ""}><label class="out-of">/${standards[index]['availability']} ${standards[index]['unit']}</label>
             </div>`
         }    
         document.getElementById('inputs').innerHTML = inputsHTML
@@ -156,7 +156,7 @@ function readInput(servicename) {
   for (id = 1; id <= inputs.components.length; id++) {
 
     let index = id - 1;
-    let {item, available, unit} = inputs.components[index];
+    let {item, availability, unit} = inputs.components[index];
     let attendance = document.getElementById(`attendance_${id}`).value;
 
     if (attendance == '') {
@@ -170,14 +170,14 @@ function readInput(servicename) {
 
       if (attendance < 0) {
         errors.push(`${item} cannot be negative`);
-      } else if (attendance > parseFloat(available)) {
-        warnings.push(`Large input for ${item} - interpreted as ${available} ${unit}`);
-        attendance = available;
+      } else if (attendance > parseFloat(availability)) {
+        warnings.push(`Large input for ${item} - interpreted as ${availability} ${unit}`);
+        attendance = availability;
       }
 
     } else {
 
-      errors.push(`${item} must be a number between 0 and ${available}`);
+      errors.push(`${item} must be a number between 0 and ${availability}`);
 
     }
 
@@ -280,7 +280,7 @@ function get(servicename) {
         if (j.error) {
           displayError(`The ${servicename} service returned an error: ${j.message}`);
         } else {
-          j.data.lines.forEach(line => displayResult(line));
+          j.lines.forEach(line => displayResult(line));
         }
 
       } else if (this.readyState == 4 && this.status != 200) {
