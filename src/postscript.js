@@ -14,9 +14,6 @@ let roundrobin = 0;
 
 /// Setup generates (on frontend start) and regenerates (when clicking Clear) the input form
 setup()
-displayResult("test");
-displayWarning("test");
-displayError("test");
 
 
 /// FUNCTIONS
@@ -56,7 +53,7 @@ function setup() {
             </div>`
         }    
         document.getElementById('inputs').innerHTML = inputsHTML
-        document.getElementById('results').innerHTML = '<p>Results:</p>';   
+        document.getElementById('results').innerHTML = '<p>Enter values above and click a button to show results</p>';   
         document.getElementById('warnings').innerHTML = '';   
         document.getElementById('errors').innerHTML = '';   
    
@@ -159,7 +156,7 @@ function readInput(servicename) {
   for (id = 1; id <= inputs.components.length; id++) {
 
     let index = id - 1;
-    let {item, available} = inputs.components[index];
+    let {item, available, unit} = inputs.components[index];
     let attendance = document.getElementById(`attendance_${id}`).value;
 
     if (attendance == '') {
@@ -174,7 +171,8 @@ function readInput(servicename) {
       if (attendance < 0) {
         errors.push(`${item} cannot be negative`);
       } else if (attendance > parseFloat(available)) {
-        errors.push(`${item} cannot be greater than ${available}`);
+        warnings.push(`Large input for ${item} - interpreted as ${available} ${unit}`);
+        attendance = available;
       }
 
     } else {
@@ -235,7 +233,7 @@ function countHealthy(service) {
 return count }
 
 function displayResult(result) {
-  document.getElementById('output-text').value += `<p>${result}</p>`;
+  document.getElementById('results').innerHTML += `<p>${result}</p>`;
 }
 
 function displayWarning(warning) {
@@ -262,24 +260,36 @@ function get(servicename) {
   if (result.errors) {
 
     result.errors.forEach(line => displayError(line));
+    document.getElementById('results').innerHTML = '';
 
   } else {
 
     let xhttp = new XMLHttpRequest();
 
     xhttp.onreadystatechange = function () {
+
       console.log(this.readyState);
+
       if (this.readyState == 4 && this.status == 200) {
-        //let response = this.response
+
         var j = JSON.parse(this.response);
+        console.log(j);
+
+        document.getElementById('results').innerHTML = '';
+
         if (j.error) {
           displayError(`The ${servicename} service returned an error: ${j.message}`);
         } else {
-          j.results.forEach(line => displayResult(line));
+          j.data.lines.forEach(line => displayResult(line));
         }
+
       } else if (this.readyState == 4 && this.status != 200) {
+
+        document.getElementById('results').innerHTML = '';
         displayError(`The ${servicename} service did not respond`);
+
       }
+
     }
 
     xhttp.open("GET", result.querystring);
