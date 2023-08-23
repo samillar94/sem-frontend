@@ -272,7 +272,11 @@ function get(servicename) {
 
       if (this.readyState == 4 && this.status == 200) {
 
-        var j = JSON.parse(this.response);
+        try {
+          var j = JSON.parse(this.response);
+        } catch {
+          displayError(`The ${servicename} service returned invalid JSON: ${this.response}`);
+        }
         console.log(j);
 
         document.getElementById('results').innerHTML = '';
