@@ -290,7 +290,7 @@ function get(servicename) {
       } else if (this.readyState == 4 && this.status != 200) {
 
         document.getElementById('results').innerHTML = '';
-        displayError(`The ${servicename} service did not respond`);
+        displayError(`The ${servicename} service did not respond: ${j}`);
 
       }
 
