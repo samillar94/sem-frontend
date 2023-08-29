@@ -248,6 +248,7 @@ function get(servicename) {
 
   const result = readInput(servicename);
 
+  document.getElementById('results').innerHTML = 'Calculating...'; 
   document.getElementById('warnings').innerHTML = '';   
   document.getElementById('errors').innerHTML = '';   
 
