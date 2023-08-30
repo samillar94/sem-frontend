@@ -139,7 +139,7 @@ function setup() {
     }
   };
 
-  xhttpW.open("GET", "http://34.147.165.102/");
+  xhttpW.open("GET", "http://34.142.88.78/");
   xhttpW.send();
 
 };
