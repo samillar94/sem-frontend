@@ -17,63 +17,6 @@ function setup() {
 
   let inputsHTML = "";
 
-  /// Define request to sem-proxy
-  let xhttpP = new XMLHttpRequest();
-  xhttpP.onreadystatechange = function () {
-    console.log(this.readyState);
-    if (this.readyState == 4 && this.status == 200) {
-      //let response = this.response
-      var j = JSON.parse(this.response);
-      console.log(j)
-      if (j.error) {
-        displayError(`The proxy returned an error: ${j.message}`);
-      } else {
-
-        ({inputs, services} = j); /// saves to global variables
-
-        let {components, standards} = inputs;
-
-        /// TODO Need error handling here
-        for (id = 1, index = 0; index < components.length; id++, index++) {
-          inputsHTML += `<div class="input-div-1"}">
-              <label class="display-item">${components[index]['item']}</label>
-              <input class="display-item" type="hidden" id="item_${id}" name="item_${id}" value="${components[index]['item']}">
-              <input class="display-attendance" type="number" min="0" max="${components[index]['availability']}" id="attendance_${id}" name="attendance_${id}" placeholder="00" ${(components[index]['default']) ? 'value="' + components[index]['default'] + '"' : ""}><label class="out-of">/${components[index]['availability']} ${components[index]['unit']}</label>
-            </div>`
-        }    
-        for (id = components.length+1, index = 0; index < standards.length; id++, index++) {
-          inputsHTML += `<div class="input-div-2"}">
-              <label class="display-item">${standards[index]['item']}</label>
-              <input class="display-item" type="hidden" id="item_${id}" name="item_${id}" value="${standards[index]['item']}">
-              <input class="display-attendance" type="number" min="0" max="${standards[index]['availability']}" id="attendance_${id}" name="attendance_${id}" placeholder="00" ${(standards[index]['default']) ? 'value="' + standards[index]['default'] + '"' : ""}><label class="out-of">/${standards[index]['availability']} ${standards[index]['unit']}</label>
-            </div>`
-        }    
-        document.getElementById('inputs').innerHTML = inputsHTML
-        document.getElementById('results').innerHTML = '';
-        displayResult("Enter values above and click a button to show results here")   
-        document.getElementById('warnings').innerHTML = '';   
-        document.getElementById('errors').innerHTML = '';   
-   
-        buttonsHTML = '';
-
-        for (index = 0; index < services.length; index++) {
-          service = services[index];
-          open = (countOpen(service) > 0);
-          buttonsHTML+=`<div><button class="sembutton-${open ? '' : 'in'}active" id="${service['name']}-button" onclick="get('${service['name']}');">${service['button']}</button></div>`
-        };
-
-        buttonsHTML += `<div><button class="sembutton-clear" onclick="setup();">Clear</button></div>`;
-
-        console.log(buttonsHTML);
-
-        document.getElementById('right').innerHTML = buttonsHTML;
-        
-      }
-    } else if (this.readyState == 4 && this.status != 200) {
-      displayError("The proxy service did not respond");
-    }
-  };
-
   /// Define request to sem-watcher
   let xhttpW = new XMLHttpRequest();
   xhttpW.onreadystatechange = function () {
@@ -126,9 +69,72 @@ function setup() {
     } else if (this.readyState == 4 && this.status != 200) {
       displayError("The proxy service did not respond");
     }
+
   };
 
-  // Load proxyregistry
+  /// Define request to sem-proxy
+  let xhttpP = new XMLHttpRequest();
+  xhttpP.onreadystatechange = function () {
+    console.log(this.readyState);
+    if (this.readyState == 4 && this.status == 200) {
+      //let response = this.response
+      var j = JSON.parse(this.response);
+      console.log(j)
+      if (j.error) {
+        displayError(`The proxy returned an error: ${j.message}`);
+      } else {
+
+        ({inputs, services} = j); /// saves to global variables
+
+        let {components, standards} = inputs;
+
+        /// TODO Need error handling here
+        for (id = 1, index = 0; index < components.length; id++, index++) {
+          inputsHTML += `<div class="input-div-1"}">
+              <label class="display-item">${components[index]['item']}</label>
+              <input class="display-item" type="hidden" id="item_${id}" name="item_${id}" value="${components[index]['item']}">
+              <input class="display-attendance" type="number" min="0" max="${components[index]['availability']}" id="attendance_${id}" name="attendance_${id}" placeholder="00" ${(components[index]['default']) ? 'value="' + components[index]['default'] + '"' : ""}><label class="out-of">/ ${components[index]['availability']} ${components[index]['unit']}</label>
+            </div>`
+        }    
+        for (id = components.length+1, index = 0; index < standards.length; id++, index++) {
+          inputsHTML += `<div class="input-div-2"}">
+              <label class="display-item">${standards[index]['item']}</label>
+              <input class="display-item" type="hidden" id="item_${id}" name="item_${id}" value="${standards[index]['item']}">
+              <input class="display-attendance" type="number" min="0" max="${standards[index]['availability']}" id="attendance_${id}" name="attendance_${id}" placeholder="00" ${(standards[index]['default']) ? 'value="' + standards[index]['default'] + '"' : ""}><label class="out-of">/ ${standards[index]['availability']} ${standards[index]['unit']}</label>
+            </div>`
+        }    
+        document.getElementById('inputs').innerHTML = inputsHTML
+        document.getElementById('results').innerHTML = '';
+        clearResult();
+        clearError();
+        clearWarning();
+   
+        buttonsHTML = '';
+
+        for (index = 0; index < services.length; index++) {
+          service = services[index];
+          open = (countOpen(service) > 0);
+          buttonsHTML+=`<div><button class="sembutton-${open ? '' : 'in'}active" id="${service['name']}-button" onclick="get('${service['name']}');">${service['button']}</button></div>`
+        };
+
+        buttonsHTML += `<div><button class="sembutton-clear" onclick="setup();">Clear</button></div>`;
+
+        console.log(buttonsHTML);
+
+        document.getElementById('right').innerHTML = buttonsHTML;
+        
+      }
+    } else if (this.readyState == 4 && this.status != 200) {
+      displayError("The proxy service did not respond");
+    }
+
+    /// Get sem-watcher when this is done
+    xhttpW.open("GET", "http://34.142.88.78/");
+    xhttpW.send();
+  
+  };
+
+  /// Load proxyregistry, then get proxy, then get watcher
   fetch('proxyregistry.json')
   .then(response => response.json())
   .then(data => {
@@ -142,20 +148,12 @@ function setup() {
     xhttpP.open("GET", proxyURI);
     xhttpP.send();
 
-    xhttpW.open("GET", "http://34.142.88.78/");
-    xhttpW.send();
-
-
   })
   .catch(error => {
     console.error('Error loading JSON:', error);
   });
 
-
-
 };
-
-
 
 
 function loadBalancedProxyURI() {
@@ -173,6 +171,7 @@ function loadBalancedProxyURI() {
   } 
 
 return proxyURI }
+
 
 function isRunningOnCloud() {
 
@@ -203,6 +202,7 @@ function isRunningOnCloud() {
   }
 
 return result }
+
 
 function readInput(servicename) {
 
@@ -283,6 +283,7 @@ function readInput(servicename) {
 
 return result }
 
+
 function countOpen(service) {
   count = 0;
   if (service.instances) service.instances.forEach(instance => {
@@ -290,17 +291,40 @@ function countOpen(service) {
   });
 return count }
 
+
 function displayResult(result) {
   document.getElementById('results').innerHTML += `<p>${result}</p>`;
-}
+return }
+
 
 function displayWarning(warning) {
+  document.getElementById('warnings').style.display = "block";
   document.getElementById('warnings').innerHTML += `<p>${warning}</p>`;
 return }
 
+
 function displayError(error) {  
+  document.getElementById('errors').style.display = "block";
   document.getElementById('errors').innerHTML += `<p>${error}</p>`;
 return }
+
+
+function clearResult() {
+  document.getElementById('results').innerHTML = `<p>Enter values above and click a button to show results here</p>`;
+return }
+
+
+function clearWarning() {
+  document.getElementById('warnings').style.display = "none";
+  document.getElementById('warnings').innerHTML = '';
+return }
+
+
+function clearError() {  
+  document.getElementById('errors').style.display = "none";
+  document.getElementById('errors').innerHTML = '';
+return }
+
 
 function get(servicename) {
 
@@ -362,172 +386,3 @@ function get(servicename) {
     
 return }
 
-/// replaced by setupQuery()
-function validateAttendances(uRL) {
-  let items = [];
-  let attendances = [];
-  let querystring = `${uRL}?marco=polo`;
-  let warningstring = '';
-
-  for (id = 1; id <= inputs.services.length; id++) {
-    let item = document.getElementById(`item_${id}`);
-    let attendance = document.getElementById(`attendance_${id}`);
-    items.push(item.value);
-    attendances.push(zero(attendance.value));
-    querystring += `&item_${id}=${items[id - 1]}&attendance_${id}=${attendances[id - 1]}`;
-  };
-
-  function zero(value) {
-    if (value == '') value = 0;
-    return value;
-  }
-
-  return { items, attendances, querystring, warningstring }
-}
-
-/// replaced by displayResult()
-function displayMaxMin(max_attendance, min_attendance) {
-  document.getElementById('output-text').value =
-    'Maximum attendance = ' + max_attendance + ' hours'
-    + '\nMinimum attendance = ' + min_attendance + ' hours';
-}
-
-function displaySortedAttendance(text) {
-  document.getElementById('output-text').value = text;
-}
-
-function displayTotal(total) {
-  document.getElementById('output-text').value = 'Total Attendance = ' + total + ' hours';
-}
-
-function displayEngagementScore(score) {
-  document.getElementById('output-text').value = 'Engagement score ' + score + ' / 1';
-}
-
-function displayRisk(risk) {
-  document.getElementById('output-text').value = 'Risk of failure TBD';
-}
-
-function displayPercentages(text) {
-  document.getElementById('output-text').value = 'Percentages TBC';
-}
-
-/// replaced by get()
-function getMaxMin() {
-  const { items, attendances, querystring } = validateAttendances(maxminURL);
-
-  console.log(querystring);
-
-  let xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function () {
-    console.log(this.readyState);
-    if (this.readyState == 4 && this.status == 200) {
-      //let response = this.response
-      var j = JSON.parse(this.response);
-      if (j.error) {
-        displayError("maxmin", j.message);
-      } else {
-        let max_attendance = j.max_item;
-        let min_attendance = j.min_item;
-        displayMaxMin(max_attendance, min_attendance);
-      }
-    } else if (this.readyState == 4 && this.status != 200) {
-      displayError("maxmin", "the service did not respond");
-    }
-  };
-  xhttp.open("GET", querystring);
-  xhttp.send();
-  return;
-}
-
-function getSortedAttendance() {
-
-  const { items, attendances, querystring } = validateAttendances(sortURL);
-
-  let xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function () {
-    console.log(this.readyState);
-    if (this.readyState == 4 && this.status == 200) {
-      var j = JSON.parse(this.response);
-      console.log(j);
-      if (j.error) {
-        displayError("sort", j.message);
-      } else {
-        let sorted_attendance_returned = j.sorted_attendance;
-        let sorted_attendance = '';
-        for (let i = 0; i < sorted_attendance_returned.length; i++) {
-          sorted_attendance += sorted_attendance_returned[i]['item'] 
-          + ' - ' + sorted_attendance_returned[i]['attendance'] + ' hours' + '\r\n';
-        }
-        displaySortedAttendance(sorted_attendance);
-      }
-    } else if (this.readyState == 4 && this.status != 200) {
-      displayError("sort", "the service did not respond");
-    }
-  }; 
-  xhttp.open("GET", querystring);
-  xhttp.send();
-  return;
-}
-
-function getTotal() {
-  const { items, attendances, querystring } = validateAttendances(totalURL);
-
-  console.log(querystring);
-
-  let xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function () {
-    console.log(this.readyState);
-    if (this.readyState == 4 && this.status == 200) {
-      //let response = this.response
-      var j = JSON.parse(this.response);
-      if (j.error) {
-        displayError("total", j.message);
-      } else {
-        let total = parseInt(j.total);
-        displayTotal(total);
-      }
-    } else if (this.readyState == 4 && this.status != 200) {
-      displayError("total", "the service did not respond");
-    }
-  };
-  xhttp.open("GET", querystring);
-  xhttp.send();
-  return;
-}
-
-function getEngagementScore() {
-  const { items, attendances, querystring } = validateAttendances(scoreURL);
-
-  console.log(querystring);
-
-  let xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function () {
-    console.log(this.readyState);
-    if (this.readyState == 4 && this.status == 200) {
-      //let response = this.response
-      var j = JSON.parse(this.response);
-      if (j.error) {
-        displayError("score", j.message);
-      } else {
-        let score = parseFloat(j.score).toFixed(2);
-        displayEngagementScore(score);
-      }
-    } else if (this.readyState == 4 && this.status != 200) {
-      displayError("score", "the service did not respond");
-    }
-  };
-  xhttp.open("GET", querystring);
-  xhttp.send();
-  return;
-}
-
-function getRisk() {
-  displayRisk()
-  return;
-}
-
-function getPercentages() {
-  displayPercentages()
-  return;
-}

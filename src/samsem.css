@@ -1,6 +1,6 @@
 body {
     font-size: 150%;
-    font-family: "Tenorite", "Segoe UI", sans-serif;
+    font-family: "Tenorite", "Segoe UI", "Helvetica", sans-serif;
 }
 
 
@@ -41,35 +41,44 @@ body {
 
 #inputs,
 #inputs input {
-    font-size: 90%;
-    font-family: monospace;
+    font-size: 80%;
+    font-family: "Tenorite", "Segoe UI", "Helvetica", sans-serif;
     font-weight: 600;
     color: #2a2a2a;
 }
 
+#inputs input {
+    border: 2px solid white;
+    border-radius: 7px;
+}
+
+#inputs input:hover {
+    border-width: 2px;
+}
+
 .input-div-2 {
     background-color: #abb2b9;
-    border-radius: 0px, 0px, 13px, 13px;
+    border-radius: 0px 0px 13px 13px;
 }
 
 #output {
     background-color: #808b96;
     line-height: 0;
-    padding: 10px 10px 10px 10px;
+    padding: 5px;
     border-radius: 13px;
 }
 
 #output > div {
     margin: 0;
     color: #2a2a2a;
-    font-family: monospace;
+    /* font-family: monospace; */
     font-weight: 600;
-    font-size: 90%;
+    font-size: 80%;
     line-height: 1;
     /* width: 480px; */
-    border: none;   
     text-align: left; 
-    border-radius: 3px;
+    border-radius: 8px;
+    padding: 5px;
 }
 
 #output > div > p {
@@ -78,15 +87,19 @@ body {
 }
 
 #results {
-    background-color: #d5d8dc;
+    background-color: #bcfefe;
 }
 
 #warnings {
     background-color: #ffff88;
+    display: none;
+    margin-top: 5px !important;
 }
 
 #errors {
     background-color: #ff8888;
+    display: none;
+    margin-bottom: 5px !important;
 }
 
 label {
@@ -104,7 +117,7 @@ input.display-attendance {
     background-color: white;
     padding: 0px 0px 0px 8px;
     margin: 4px;
-    font-family: monospace;
+    /* font-family: monospace; */
     letter-spacing: 0.1em;
     width: 40px;
     line-height: 180%;
@@ -115,17 +128,17 @@ label.out-of {
     text-align: left;
 }
 
-textarea.display-output {
+/* textarea.display-output {
     background-color: #d5d8dc;
     padding: 5px;
     margin: 10px;
-    font-family: monospace;
+    font-family: monospace; 
     width: 480px;
     border: none;
-}
+} */
 
 button {
-    font-family: "Tenorite", "Segoe UI", sans-serif;
+    font-family: "Tenorite", "Segoe UI", "Helvetica", sans-serif;
     font-weight: 500;
     color: white;
     padding: 0px 32px;
@@ -137,15 +150,18 @@ button {
     cursor: pointer;
     height: 50px;
     width: 400px;
+    border: 2px solid #808b96;
+    border-radius: 13px;
 }
 
 button:hover {
     border-width: 5px;
+    /* border-color: ; */
     /* transition-duration: 0.3s; */
 }
 
 .sembutton-inactive {
-    background-color: gray;
+    background-color: #808b96;
 }
 
 .sembutton-active {
@@ -157,7 +173,7 @@ button:hover {
 }
 
 .sembutton-failed {
-    background-color: #ffdd77;
+    background-color: #ffbf00;
 }
 
 .sembutton-clear {
