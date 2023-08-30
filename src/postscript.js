@@ -17,8 +17,9 @@ function setup() {
 
   let inputsHTML = "";
 
-  let xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function () {
+  /// Define request to sem-proxy
+  let xhttpP = new XMLHttpRequest();
+  xhttpP.onreadystatechange = function () {
     console.log(this.readyState);
     if (this.readyState == 4 && this.status == 200) {
       //let response = this.response
@@ -73,22 +74,7 @@ function setup() {
     }
   };
 
-  // Load proxyregistry
-  fetch('proxyregistry.json')
-  .then(response => response.json())
-  .then(data => {
-    console.log(data); 
-    proxies.proxyLocal = data.urilocal;
-    proxies.proxyURIs = data.uris;
-    let proxyURI = loadBalancedProxyURI()+"/status";
-    console.log(proxyURI);    
-    xhttp.open("GET", proxyURI);
-    xhttp.send();
-  })
-  .catch(error => {
-    console.error('Error loading JSON:', error);
-  });
-
+  /// Define request to sem-watcher
   let xhttpW = new XMLHttpRequest();
   xhttpW.onreadystatechange = function () {
     console.log(this.readyState);
@@ -110,12 +96,14 @@ function setup() {
           try {
             for (const [testName, testResults] of Object.entries(serviceTests)) {
 
-              if (!testResults.passed) {
-                className = "sembutton-failed";
-              }
-
               if (!testResults.working) {
                 className = "sembutton-inactive"
+                break;
+              }
+
+              if (!testResults.passed) {
+                className = "sembutton-failed";
+                break;
               }
 
             }
@@ -139,8 +127,30 @@ function setup() {
     }
   };
 
-  xhttpW.open("GET", "http://34.142.88.78/");
-  xhttpW.send();
+  // Load proxyregistry
+  fetch('proxyregistry.json')
+  .then(response => response.json())
+  .then(data => {
+
+    console.log(data); 
+    proxies.proxyLocal = data.urilocal;
+    proxies.proxyURIs = data.uris;
+    let proxyURI = loadBalancedProxyURI()+"/status";
+    console.log(proxyURI);    
+
+    xhttpP.open("GET", proxyURI);
+    xhttpP.send();
+
+    xhttpW.open("GET", "http://34.142.88.78/");
+    xhttpW.send();
+
+
+  })
+  .catch(error => {
+    console.error('Error loading JSON:', error);
+  });
+
+
 
 };
 
