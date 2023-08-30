@@ -67,7 +67,8 @@ function setup() {
         
       }
     } else if (this.readyState == 4 && this.status != 200) {
-      displayError("The proxy service did not respond");
+      console.log("The watcher service did not respond");
+      displayWarning("The monitoring service did not respond")
     }
 
   };
