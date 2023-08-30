@@ -94,6 +94,7 @@ function setup() {
           className = "sembutton-active";
 
           try {
+
             for (const [testName, testResults] of Object.entries(serviceTests)) {
 
               if (!testResults.working) {
@@ -105,10 +106,10 @@ function setup() {
                 className = "sembutton-failed";
                 break;
               }
+              
+              className = "sembutton-passed";
 
             }
-
-            className = "sembutton-passed";
 
           } catch {
             console.log("Issue with the monitoring results")
