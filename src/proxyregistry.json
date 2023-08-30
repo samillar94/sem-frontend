@@ -1,6 +1,7 @@
     {
         "uris": [
-            "http://sem-proxy.40103709.qpc.hal.davecutting.uk"
+            "http://sem-proxy.40103709.qpc.hal.davecutting.uk",
+            "http://semproxy.40103709.qpc.hal.davecutting.uk"
         ],
         "urilocal": "http://localhost:8888"
     }
