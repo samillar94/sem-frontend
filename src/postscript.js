@@ -48,7 +48,8 @@ function setup() {
             </div>`
         }    
         document.getElementById('inputs').innerHTML = inputsHTML
-        document.getElementById('results').innerHTML = '<p>Enter values above and click a button to show results</p>';   
+        document.getElementById('results').innerHTML = '';
+        displayResult("Enter values above and click a button to show results here")   
         document.getElementById('warnings').innerHTML = '';   
         document.getElementById('errors').innerHTML = '';   
    
@@ -56,8 +57,8 @@ function setup() {
 
         for (index = 0; index < services.length; index++) {
           service = services[index];
-          healthy = (countHealthy(service) > 0);
-          buttonsHTML+=`<div><button class="sembutton-${healthy ? '' : 'in'}active" onclick="get('${service['name']}');">${service['button']}</button></div>`
+          open = (countOpen(service) > 0);
+          buttonsHTML+=`<div><button class="sembutton-${open ? '' : 'in'}active" id="${service['name']}-button" onclick="get('${service['name']}');">${service['button']}</button></div>`
         };
 
         buttonsHTML += `<div><button class="sembutton-clear" onclick="setup();">Clear</button></div>`;
@@ -88,9 +89,63 @@ function setup() {
     console.error('Error loading JSON:', error);
   });
 
+  let xhttpW = new XMLHttpRequest();
+  xhttpW.onreadystatechange = function () {
+    console.log(this.readyState);
+    if (this.readyState == 4 && this.status == 200) {
+      var j = JSON.parse(this.response);
+      console.log(j)
+      if (!j.tests) {
+        displayError(`The monitoring service returned an error: ${j.message}`);
+      } else {
+
+        displayResult("Checking monitoring service...")
+
+        serviceMetrics = j.tests
+
+        for (const [serviceName, serviceTests] of Object.entries(serviceMetrics)) {
+
+          className = "sembutton-active";
+
+          try {
+            for (const [testName, testResults] of Object.entries(serviceTests)) {
+
+              if (!testResults.passed) {
+                className = "sembutton-failed";
+              }
+
+              if (!testResults.working) {
+                className = "sembutton-inactive"
+              }
+
+            }
+
+            className = "sembutton-passed";
+
+          } catch {
+            console.log("Issue with the monitoring results")
+          }
+
+          document.getElementById(serviceName+'-button').className = className
+
+        };        
+
+        document.getElementById('results').innerHTML = '';
+        displayResult("Enter values above and click a button to show results here")
+        
+      }
+    } else if (this.readyState == 4 && this.status != 200) {
+      displayError("The proxy service did not respond");
+    }
+  };
+
+  xhttpW.open("GET", "http://34.147.165.102/");
+  xhttpW.send();
+
+};
 
 
-}
+
 
 function loadBalancedProxyURI() {
   /**
@@ -217,10 +272,10 @@ function readInput(servicename) {
 
 return result }
 
-function countHealthy(service) {
+function countOpen(service) {
   count = 0;
   if (service.instances) service.instances.forEach(instance => {
-    if (instance.healthy) count++;
+    if (instance.open) count++;
   });
 return count }
 

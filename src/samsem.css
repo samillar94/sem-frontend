@@ -144,14 +144,24 @@ button:hover {
     /* transition-duration: 0.3s; */
 }
 
-.sembutton-active {
-    background-color: #2874a6;
-}
-
 .sembutton-inactive {
     background-color: gray;
 }
 
+.sembutton-active {
+    background-color: #2874a6;
+}
+
+.sembutton-passed {
+    background-color: #1c6900;
+}
+
+.sembutton-failed {
+    background-color: #ffdd77;
+}
+
 .sembutton-clear {
-    background-color: #c0392b;
+    color: black;
+    font-style: italic;
+    background-color: #ffffff;
 }
