@@ -130,7 +130,7 @@ function setup() {
     }
 
     /// Get sem-watcher when this is done
-    xhttpW.open("GET", "http://34.142.88.78/");
+    xhttpW.open("GET", "http://34.142.88.78");
     xhttpW.send();
   
   };
