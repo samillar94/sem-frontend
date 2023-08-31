@@ -30,7 +30,7 @@ function setup(keepdata) {
         displayError(`The monitoring service returned an error: ${j.message}`);
       } else {
 
-        displayResult("Checking monitoring service...")
+        displayError("Checking monitoring service...")
 
         serviceMetrics = j.tests
 
@@ -123,15 +123,16 @@ function setup(keepdata) {
         document.getElementById('right').innerHTML = buttonsHTML;
         
       }
+      
+      /// Get sem-watcher when this is done
+      xhttpW.open("GET", "http://34.142.88.78");
+      xhttpW.send();
+          
     } else if (this.readyState == 4 && this.status != 200) {
       displayError("A proxy service did not respond - please try again");
       proxies.proxyURIs.splice(roundrobin,1); /// remove bad proxy from the array
     }
 
-    /// Get sem-watcher when this is done
-    xhttpW.open("GET", "http://34.142.88.78");
-    xhttpW.send();
-  
   };
 
   /// Load proxyregistry, then get proxy, then get watcher
