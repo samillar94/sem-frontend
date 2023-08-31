@@ -166,7 +166,8 @@ function loadBalancedProxyURI() {
   if (isRunningOnCloud()) {
     console.log(proxyURIs);
     console.log(roundrobin);
-    (roundrobin++)%=proxyURIs.length;
+    roundrobin++;
+    roundrobin%=proxyURIs.length;
     console.log(roundrobin);
     proxyURI = proxyURIs[roundrobin];
     console.log(proxyURI);
