@@ -30,8 +30,6 @@ function setup(keepdata) {
         displayError(`The monitoring service returned an error: ${j.message}`);
       } else {
 
-        displayError("Checking monitoring service...")
-
         serviceMetrics = j.tests
 
         for (const [serviceName, serviceTests] of Object.entries(serviceMetrics)) {
@@ -65,6 +63,7 @@ function setup(keepdata) {
         };        
 
         clearResult();
+
         
       }
     } else if (this.readyState == 4 && this.status != 200) {
