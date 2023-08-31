@@ -123,7 +123,7 @@ function setup(keepdata) {
         document.getElementById('right').innerHTML = buttonsHTML;
         
       }
-      
+
       /// Get sem-watcher when this is done
       xhttpW.open("GET", "http://34.142.88.78");
       xhttpW.send();
@@ -170,8 +170,7 @@ function loadBalancedProxyURI() {
     if (proxyURIs.length == 0) {
       throw new Error("No proxies available"); /// caught in setup() and get()
     }
-    roundrobin++;
-    roundrobin%=proxyURIs.length;
+    roundrobin = Math.floor(Math.random() * proxyURIs.length);
     proxyURI = proxyURIs[roundrobin];
   }
 
