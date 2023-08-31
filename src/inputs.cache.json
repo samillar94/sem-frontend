@@ -2,31 +2,35 @@
     "components": [
         {
             "item": "Lecture sessions",
+            "id": 1,
             "default": null,
             "availability": 33,
             "unit": "hours",
-            "scoreweight": 0.3 
+            "weight": 0.3 
         },
         {
             "item": "Lab sessions",
+            "id": 2,
             "default": null,
             "availability": 22,
             "unit": "hours",
-            "scoreweight": 0.4
+            "weight": 0.4
         },
         {
             "item": "Support sessions",
+            "id": 3,
             "default": null,
             "availability": 44,
             "unit": "hours",
-            "scoreweight": 0.15
+            "weight": 0.15
         },
         {
             "item": "Canvas activities",
+            "id": 4,
             "default": null,
             "availability": 55,
             "unit": "hours",
-            "scoreweight": 0.15
+            "weight": 0.15
         }
 
     ],

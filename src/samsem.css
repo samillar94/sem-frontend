@@ -185,12 +185,13 @@ button:hover {
 #footer {
     font-size: 50%;
     text-align: center;
+    font-weight: 600;
 }
 
 #footer div {
     display: inline-block;
     color: white;
-    padding: 3px;
-    border-radius: 3px;
+    padding: 8px;
+    border-radius: 8px;
     margin-left: 5px;
 }
