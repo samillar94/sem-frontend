@@ -1,5 +1,3 @@
-const { hasUncaughtExceptionCaptureCallback } = require("process");
-
 /// Global variables populated during setup()
 let inputs = [];
 let services = [];
