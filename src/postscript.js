@@ -211,86 +211,79 @@ return result }
 function readInput(servicename) {
 
   let result = {};
+  let querystring = `${loadBalancedProxyURI()}?service=${servicename}`; /// throws
+  let warnings = [];
+  let errors = [];
 
-  try {
+  for (id = 1; id <= inputs.components.length; id++) {
 
-    let querystring = `${loadBalancedProxyURI()}?service=${servicename}`;
-    let warnings = [];
-    let errors = [];
+    let index = id - 1;
+    let {item, availability, unit} = inputs.components[index];
+    let attendance = document.getElementById(`attendance_${id}`).value;
 
-    for (id = 1; id <= inputs.components.length; id++) {
+    if (attendance == '') {
 
-      let index = id - 1;
-      let {item, availability, unit} = inputs.components[index];
-      let attendance = document.getElementById(`attendance_${id}`).value;
+      attendance = 0;
+      warnings.push(`No input for ${item} - interpreted as 0`);
 
-      if (attendance == '') {
+    } else if (parseFloat(attendance) != NaN) {
 
-        attendance = 0;
-        warnings.push(`No input for ${item} - interpreted as 0`);
+      attendance = parseFloat(attendance);
 
-      } else if (parseFloat(attendance) != NaN) {
-
-        attendance = parseFloat(attendance);
-
-        if (attendance < 0) {
-          errors.push(`${item} cannot be negative`);
-        } else if (attendance > parseFloat(availability)) {
-          warnings.push(`Large input for ${item} - interpreted as ${availability} ${unit}`);
-          attendance = availability;
-        }
-
-      } else {
-
-        errors.push(`${item} must be a number between 0 and ${availability}`);
-
-      }
-
-      querystring += `&a${id}=${attendance}`;
-
-    }
-
-    let cutoff = document.getElementById(`attendance_5`).value;
-
-    if (cutoff == '') {
-
-      cutoff = 0;
-      warnings.push(`No input for cutoff - interpreted as 0`);
-
-    } else if (parseFloat(cutoff) != NaN) {
-
-      cutoff = parseFloat(cutoff);
-
-      if (cutoff < 0) {
-        errors.push(`Cutoff cannot be negative`);
-      } else if (cutoff > 100) {
-        errors.push(`Cutoff cannot be greater than 100%`);
+      if (attendance < 0) {
+        errors.push(`${item} cannot be negative`);
+      } else if (attendance > parseFloat(availability)) {
+        warnings.push(`Large input for ${item} - interpreted as ${availability} ${unit}`);
+        attendance = availability;
       }
 
     } else {
 
-      errors.push(`${item} must be a number between 0 and 100`);
+      errors.push(`${item} must be a number between 0 and ${availability}`);
 
     }
 
-    querystring += `&c=${cutoff}`;
+    querystring += `&a${id}=${attendance}`;
 
-    /// result construction
-    if (errors.length == 0) {
-      result = {querystring};
-    } else {
-      result = {errors};
-    }
-
-    if (warnings.length > 0) {
-      result.warnings = warnings;
-    }
-
-    console.log(result)  
-
-  } catch {
-    displayError("Sorry, no proxies available")
   }
+
+  let cutoff = document.getElementById(`attendance_5`).value;
+
+  if (cutoff == '') {
+
+    cutoff = 0;
+    warnings.push(`No input for cutoff - interpreted as 0`);
+
+  } else if (parseFloat(cutoff) != NaN) {
+
+    cutoff = parseFloat(cutoff);
+
+    if (cutoff < 0) {
+      errors.push(`Cutoff cannot be negative`);
+    } else if (cutoff > 100) {
+      errors.push(`Cutoff cannot be greater than 100%`);
+    }
+
+  } else {
+
+    errors.push(`${item} must be a number between 0 and 100`);
+
+  }
+
+  querystring += `&c=${cutoff}`;
+
+  /// result construction
+  if (errors.length == 0) {
+    result = {querystring};
+  } else {
+    result = {errors};
+  }
+
+  if (warnings.length > 0) {
+    result.warnings = warnings;
+  }
+
+  console.log(result)  
 
 return result }
 
@@ -340,62 +333,66 @@ return }
 
 function get(servicename) {
 
-  const result = readInput(servicename);
+  try {
+    const result = readInput(servicename);
 
-  document.getElementById('results').innerHTML = 'Calculating...'; 
-  document.getElementById('warnings').innerHTML = '';   
-  document.getElementById('errors').innerHTML = '';   
+    document.getElementById('results').innerHTML = 'Calculating...'; 
+    document.getElementById('warnings').innerHTML = '';   
+    document.getElementById('errors').innerHTML = '';   
 
-  if (result.warnings) {
+    if (result.warnings) {
 
-    result.warnings.forEach(line => displayWarning(line));
-
-  }
-
-  if (result.errors) {
-
-    result.errors.forEach(line => displayError(line));
-    document.getElementById('results').innerHTML = '';
-
-  } else {
-
-    let xhttp = new XMLHttpRequest();
-
-    xhttp.onreadystatechange = function () {
-
-      console.log(this.readyState);
-
-      if (this.readyState == 4 && this.status == 200) {
-
-        try {
-          var j = JSON.parse(this.response);
-        } catch {
-          displayError(`The ${servicename} service returned invalid JSON: ${this.response}`);
-        }
-        console.log(j);
-
-        document.getElementById('results').innerHTML = '';
-
-        if (j.error) {
-          displayError(`The ${servicename} service returned an error: ${j.message}`);
-        } else {
-          j.lines.forEach(line => displayResult(line));
-        }
-
-      } else if (this.readyState == 4 && this.status != 200) {
-
-        document.getElementById('results').innerHTML = '';
-        displayError(`A proxy service did not respond - please try again`);
-        proxies.proxyURIs.splice(roundrobin,1); /// remove bad proxy from the array
-
-      }
+      result.warnings.forEach(line => displayWarning(line));
 
     }
 
-    xhttp.open("GET", result.querystring);
-    xhttp.send();
+    if (result.errors) {
 
+      result.errors.forEach(line => displayError(line));
+      document.getElementById('results').innerHTML = '';
+
+    } else {
+
+      let xhttp = new XMLHttpRequest();
+
+      xhttp.onreadystatechange = function () {
+
+        console.log(this.readyState);
+
+        if (this.readyState == 4 && this.status == 200) {
+
+          try {
+            var j = JSON.parse(this.response);
+          } catch {
+            displayError(`The ${servicename} service returned invalid JSON: ${this.response}`);
+          }
+          console.log(j);
+
+          document.getElementById('results').innerHTML = '';
+
+          if (j.error) {
+            displayError(`The ${servicename} service returned an error: ${j.message}`);
+          } else {
+            j.lines.forEach(line => displayResult(line));
+          }
+
+        } else if (this.readyState == 4 && this.status != 200) {
+
+          document.getElementById('results').innerHTML = '';
+          displayError(`A proxy service did not respond - please try again`);
+          proxies.proxyURIs.splice(roundrobin,1); /// remove bad proxy from the array
+
+        }
+
+      }
+
+      xhttp.open("GET", result.querystring);
+      xhttp.send();
+
+    }
+  } catch {
+    displayError("Sorry, no proxies available")
   }
-    
+
 return }
 
