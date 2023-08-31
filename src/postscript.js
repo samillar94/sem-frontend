@@ -141,14 +141,14 @@ function setup(keepdata) {
 
     proxies.proxyLocal = data.urilocal;
     proxies.proxyURIs = data.uris;
+
     try {
       let proxyURI = loadBalancedProxyURI()+"/status";
       console.log("Getting configuration from proxy at: "+proxyURI);    
-
       xhttpP.open("GET", proxyURI);
       xhttpP.send();      
     } catch {
-      displayError("Sorry, no proxies available")
+      displayError("Sorry, no proxies available");
     }
 
   })
@@ -160,22 +160,19 @@ function setup(keepdata) {
 
 
 function loadBalancedProxyURI() {
-  /**
-   * Task D
-   */
 
-  let { proxyURIs, proxyLocal } = proxies;
+  let { proxyURIs, proxyLocal } = proxies; /// populated by fetch function in setup()
 
   let proxyURI = proxyLocal;
 
   if (isRunningOnCloud()) {
-    if (proxyURIs.length < 1) {
-      throw new Error("No proxies available")
+    if (proxyURIs.length == 0) {
+      throw new Error("No proxies available"); /// caught in setup() and get()
     }
     roundrobin++;
     roundrobin%=proxyURIs.length;
     proxyURI = proxyURIs[roundrobin];
-  } 
+  }
 
 return proxyURI }
 
@@ -214,79 +211,86 @@ return result }
 function readInput(servicename) {
 
   let result = {};
-  let querystring = `${loadBalancedProxyURI()}?service=${servicename}`;
-  let warnings = [];
-  let errors = [];
 
-  for (id = 1; id <= inputs.components.length; id++) {
+  try {
 
-    let index = id - 1;
-    let {item, availability, unit} = inputs.components[index];
-    let attendance = document.getElementById(`attendance_${id}`).value;
+    let querystring = `${loadBalancedProxyURI()}?service=${servicename}`;
+    let warnings = [];
+    let errors = [];
 
-    if (attendance == '') {
+    for (id = 1; id <= inputs.components.length; id++) {
 
-      attendance = 0;
-      warnings.push(`No input for ${item} - interpreted as 0`);
+      let index = id - 1;
+      let {item, availability, unit} = inputs.components[index];
+      let attendance = document.getElementById(`attendance_${id}`).value;
 
-    } else if (parseFloat(attendance) != NaN) {
+      if (attendance == '') {
 
-      attendance = parseFloat(attendance);
+        attendance = 0;
+        warnings.push(`No input for ${item} - interpreted as 0`);
 
-      if (attendance < 0) {
-        errors.push(`${item} cannot be negative`);
-      } else if (attendance > parseFloat(availability)) {
-        warnings.push(`Large input for ${item} - interpreted as ${availability} ${unit}`);
-        attendance = availability;
+      } else if (parseFloat(attendance) != NaN) {
+
+        attendance = parseFloat(attendance);
+
+        if (attendance < 0) {
+          errors.push(`${item} cannot be negative`);
+        } else if (attendance > parseFloat(availability)) {
+          warnings.push(`Large input for ${item} - interpreted as ${availability} ${unit}`);
+          attendance = availability;
+        }
+
+      } else {
+
+        errors.push(`${item} must be a number between 0 and ${availability}`);
+
+      }
+
+      querystring += `&a${id}=${attendance}`;
+
+    }
+
+    let cutoff = document.getElementById(`attendance_5`).value;
+
+    if (cutoff == '') {
+
+      cutoff = 0;
+      warnings.push(`No input for cutoff - interpreted as 0`);
+
+    } else if (parseFloat(cutoff) != NaN) {
+
+      cutoff = parseFloat(cutoff);
+
+      if (cutoff < 0) {
+        errors.push(`Cutoff cannot be negative`);
+      } else if (cutoff > 100) {
+        errors.push(`Cutoff cannot be greater than 100%`);
       }
 
     } else {
 
-      errors.push(`${item} must be a number between 0 and ${availability}`);
+      errors.push(`${item} must be a number between 0 and 100`);
 
     }
 
-    querystring += `&a${id}=${attendance}`;
+    querystring += `&c=${cutoff}`;
 
-  }
-
-  let cutoff = document.getElementById(`attendance_5`).value;
-
-  if (cutoff == '') {
-
-    cutoff = 0;
-    warnings.push(`No input for cutoff - interpreted as 0`);
-
-  } else if (parseFloat(cutoff) != NaN) {
-
-    cutoff = parseFloat(cutoff);
-
-    if (cutoff < 0) {
-      errors.push(`Cutoff cannot be negative`);
-    } else if (cutoff > 100) {
-      errors.push(`Cutoff cannot be greater than 100%`);
+    /// result construction
+    if (errors.length == 0) {
+      result = {querystring};
+    } else {
+      result = {errors};
     }
 
-  } else {
+    if (warnings.length > 0) {
+      result.warnings = warnings;
+    }
 
-    errors.push(`${item} must be a number between 0 and 100`);
+    console.log(result)  
 
+  } catch {
+    displayError("Sorry, no proxies available")
   }
-
-  querystring += `&c=${cutoff}`;
-
-  /// result construction
-  if (errors.length == 0) {
-    result = {querystring};
-  } else {
-    result = {errors};
-  }
-
-  if (warnings.length > 0) {
-    result.warnings = warnings;
-  }
-
-  console.log(result)
 
 return result }
 
@@ -381,7 +385,8 @@ function get(servicename) {
       } else if (this.readyState == 4 && this.status != 200) {
 
         document.getElementById('results').innerHTML = '';
-        displayError(`The ${servicename} service did not respond: ${this.response}`);
+        displayError(`A proxy service did not respond - please try again`);
+        proxies.proxyURIs.splice(roundrobin,1); /// remove bad proxy from the array
 
       }
 
