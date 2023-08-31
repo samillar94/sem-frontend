@@ -1,3 +1,5 @@
+const { hasUncaughtExceptionCaptureCallback } = require("process");
+
 /// Global variables populated during setup()
 let inputs = [];
 let services = [];
@@ -124,7 +126,8 @@ function setup(keepdata) {
         
       }
     } else if (this.readyState == 4 && this.status != 200) {
-      displayError("The proxy service did not respond");
+      displayError("A proxy service did not respond - please try again");
+      proxies.proxyURIs.splice(roundrobin,1); /// remove bad proxy from the array
     }
 
     /// Get sem-watcher when this is done
@@ -140,11 +143,15 @@ function setup(keepdata) {
 
     proxies.proxyLocal = data.urilocal;
     proxies.proxyURIs = data.uris;
-    let proxyURI = loadBalancedProxyURI()+"/status";
-    console.log("Getting configuration from proxy at: "+proxyURI);    
+    try {
+      let proxyURI = loadBalancedProxyURI()+"/status";
+      console.log("Getting configuration from proxy at: "+proxyURI);    
 
-    xhttpP.open("GET", proxyURI);
-    xhttpP.send();
+      xhttpP.open("GET", proxyURI);
+      xhttpP.send();      
+    } catch {
+      displayError("Sorry, no proxies available")
+    }
 
   })
   .catch(error => {
@@ -164,13 +171,12 @@ function loadBalancedProxyURI() {
   let proxyURI = proxyLocal;
 
   if (isRunningOnCloud()) {
-    console.log(proxyURIs);
-    console.log(roundrobin);
+    if (proxyURIs.length < 1) {
+      throw new Error("No proxies available")
+    }
     roundrobin++;
     roundrobin%=proxyURIs.length;
-    console.log(roundrobin);
     proxyURI = proxyURIs[roundrobin];
-    console.log(proxyURI);
   } 
 
 return proxyURI }
