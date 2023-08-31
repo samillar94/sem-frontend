@@ -8,12 +8,14 @@ let roundrobin = 0;
 /// MAIN
 
 /// Setup generates (on frontend start) and regenerates (when clicking Clear) the input form
-setup()
+
+// document.cookie = "s1=70;"
+setup(true)
 
 
 /// FUNCTIONS
 
-function setup() {
+function setup(keepdata) {
 
   let inputsHTML = "";
 
@@ -34,23 +36,23 @@ function setup() {
 
         for (const [serviceName, serviceTests] of Object.entries(serviceMetrics)) {
 
-          className = "sembutton-active";
+          className = "active";
 
           try {
 
             for (const [testName, testResults] of Object.entries(serviceTests)) {
 
               if (!testResults.working) {
-                className = "sembutton-inactive"
+                className = "inactive"
                 break;
               }
 
               if (!testResults.passed) {
-                className = "sembutton-failed";
+                className = "failed";
                 break;
               }
               
-              className = "sembutton-passed";
+              className = "passed";
 
             }
 
@@ -62,13 +64,11 @@ function setup() {
 
         };        
 
-        document.getElementById('results').innerHTML = '';
-        displayResult("Enter values above and click a button to show results here")
+        clearResult();
         
       }
     } else if (this.readyState == 4 && this.status != 200) {
-      console.log("The watcher service did not respond");
-      displayWarning("The monitoring service did not respond")
+      displayWarning("The monitoring service did not respond");
     }
 
   };
@@ -78,18 +78,16 @@ function setup() {
   xhttpP.onreadystatechange = function () {
     console.log(this.readyState);
     if (this.readyState == 4 && this.status == 200) {
-      //let response = this.response
       var j = JSON.parse(this.response);
       console.log(j)
       if (j.error) {
-        displayError(`The proxy returned an error: ${j.message}`);
+        displayError(`The proxy returned an error on the /status route: ${j.message}`);
       } else {
 
         ({inputs, services} = j); /// saves to global variables
 
         let {components, standards} = inputs;
 
-        /// TODO Need error handling here
         for (id = 1, index = 0; index < components.length; id++, index++) {
           inputsHTML += `<div class="input-div-1"}">
               <label class="display-item">${components[index]['item']}</label>
@@ -115,12 +113,12 @@ function setup() {
         for (index = 0; index < services.length; index++) {
           service = services[index];
           open = (countOpen(service) > 0);
-          buttonsHTML+=`<div><button class="sembutton-${open ? '' : 'in'}active" id="${service['name']}-button" onclick="get('${service['name']}');">${service['button']}</button></div>`
+          buttonsHTML+=`<div><button class="${open ? '' : 'in'}active" id="${service['name']}-button" onclick="get('${service['name']}');">${service['button']}</button></div>`
         };
 
-        buttonsHTML += `<div><button class="sembutton-clear" onclick="setup();">Clear</button></div>`;
+        buttonsHTML += `<div><button class="clear" onclick="setup(false);">Clear</button></div>`;
 
-        console.log(buttonsHTML);
+        // console.log(buttonsHTML);
 
         document.getElementById('right').innerHTML = buttonsHTML;
         
@@ -140,11 +138,10 @@ function setup() {
   .then(response => response.json())
   .then(data => {
 
-    console.log(data); 
     proxies.proxyLocal = data.urilocal;
     proxies.proxyURIs = data.uris;
     let proxyURI = loadBalancedProxyURI()+"/status";
-    console.log(proxyURI);    
+    console.log("Getting configuration from proxy at: "+proxyURI);    
 
     xhttpP.open("GET", proxyURI);
     xhttpP.send();
@@ -294,6 +291,7 @@ return count }
 
 
 function displayResult(result) {
+  clearError();
   document.getElementById('results').innerHTML += `<p>${result}</p>`;
 return }
 
