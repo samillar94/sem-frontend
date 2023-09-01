@@ -2,14 +2,13 @@
 let inputs = [];
 let services = [];
 let proxies = {};
-let roundrobin = 0;
+let proxyRandomIndex = 0;
 
 
 /// MAIN
 
 /// Setup generates (on frontend start) and regenerates (when clicking Clear) the input form
 
-// document.cookie = "s1=70;"
 setup(true)
 
 
@@ -129,7 +128,7 @@ function setup(keepdata) {
           
     } else if (this.readyState == 4 && this.status != 200) {
       displayError("A proxy service did not respond - please try again");
-      proxies.proxyURIs.splice(roundrobin,1); /// remove bad proxy from the array
+      proxies.proxyURIs.splice(proxyRandomIndex,1); /// remove bad proxy from the array
     }
 
   };
@@ -169,8 +168,8 @@ function loadBalancedProxyURI() {
     if (proxyURIs.length == 0) {
       throw new Error("No proxies available"); /// caught in setup() and get()
     }
-    roundrobin = Math.floor(Math.random() * proxyURIs.length);
-    proxyURI = proxyURIs[roundrobin];
+    proxyRandomIndex = Math.floor(Math.random() * proxyURIs.length);
+    proxyURI = proxyURIs[proxyRandomIndex];
   }
 
 return proxyURI }
@@ -379,7 +378,7 @@ function get(servicename) {
 
           document.getElementById('results').innerHTML = '';
           displayError(`A proxy service did not respond - please try again`);
-          proxies.proxyURIs.splice(roundrobin,1); /// remove bad proxy from the array
+          proxies.proxyURIs.splice(proxyRandomIndex,1); /// remove bad proxy from the array
 
         }
 
